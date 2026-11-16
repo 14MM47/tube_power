@@ -3,17 +3,18 @@
 - Cut-in (starts and produces >10 mW): 1.6 m/s with kick-start
 - Tracking: 2-7 m/s; power-capped at 6.97 W up to 8.0 m/s; braked above that
 - Survives (parked, braked) up to **41.6 m/s**, limited by the hub. Requirement: 40 m/s. Per part: neck 50, skin 57, wall 46, discs 44, hub 42
-- Worst while swinging: neck 18%, neck fatigue 35%, skin 15%, voltage 30%, generator heat 56%
+- Worst while swinging: neck 18%, neck fatigue 35%, skin 15%, voltage 30%, generator heat 56%, neck mode 60%
+- Neck-tube bending mode about 16.0 Hz (swing must stay below 10.6 Hz, reached at 13.3 m/s)
 
 | Wind (m/s) | Mode | Re | Flow | Tuned to (Hz) | Carriage (mm) | Swing (±°) | Elec (W) | Top accel (g) | EMF (V) | Neck | Neck fatigue | Skin | Wall | Discs | Hub | Worst |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | idle | 16,667 | tested | 5.09 | 140 | 0.0 | 0.00 | 0.0 | 0 | 0% | 0% | 0% | 0% | 0% | 0% | hub 0% |
-| 2 | tracking | 33,333 | tested | 1.45 | 42 | 5.4 | 0.10 | 1.5 | 9 | 1% | 2% | 1% | 0% | 0% | 0% | voltage 6% |
-| 3 | tracking | 50,000 | tested | 2.18 | 61 | 6.6 | 0.49 | 4.3 | 17 | 3% | 6% | 2% | 0% | 0% | 1% | voltage 12% |
-| 4 | tracking | 66,667 | tested | 2.91 | 81 | 7.0 | 1.27 | 8.1 | 25 | 6% | 11% | 5% | 1% | 1% | 2% | voltage 16% |
-| 5 | tracking | 83,333 | tested | 3.64 | 100 | 7.2 | 2.54 | 12.9 | 31 | 9% | 17% | 7% | 1% | 1% | 2% | voltage 21% |
-| 6 | tracking | 100,000 | tested | 4.36 | 120 | 7.3 | 4.41 | 18.9 | 38 | 13% | 25% | 11% | 2% | 2% | 3% | voltage 25% |
-| 7 | tracking | 116,667 | tested | 5.09 | 140 | 7.3 | 6.97 | 25.9 | 45 | 18% | 35% | 15% | 2% | 3% | 5% | neck fatigue 35% |
+| 2 | tracking | 33,333 | tested | 1.45 | 42 | 5.4 | 0.10 | 1.5 | 9 | 1% | 2% | 1% | 0% | 0% | 0% | neck mode 15% |
+| 3 | tracking | 50,000 | tested | 2.18 | 61 | 6.6 | 0.49 | 4.3 | 17 | 3% | 6% | 2% | 0% | 0% | 1% | neck mode 23% |
+| 4 | tracking | 66,667 | tested | 2.91 | 81 | 7.0 | 1.27 | 8.1 | 25 | 6% | 11% | 5% | 1% | 1% | 2% | neck mode 30% |
+| 5 | tracking | 83,333 | tested | 3.64 | 100 | 7.2 | 2.54 | 12.9 | 31 | 9% | 17% | 7% | 1% | 1% | 2% | neck mode 38% |
+| 6 | tracking | 100,000 | tested | 4.36 | 120 | 7.3 | 4.41 | 18.9 | 38 | 13% | 25% | 11% | 2% | 2% | 3% | neck mode 45% |
+| 7 | tracking | 116,667 | tested | 5.09 | 140 | 7.3 | 6.97 | 25.9 | 45 | 18% | 35% | 15% | 2% | 3% | 5% | neck mode 53% |
 | 8 | braked | 133,333 | beyond tested | 5.09 | 140 | 0.6 | 0.00 | 2.6 | 0 | 3% | 4% | 2% | 3% | 3% | 4% | generator heat 13% |
 | 9 | braked | 150,000 | beyond tested | 5.09 | 140 | 0.0 | 0.00 | 0.0 | 0 | 3% | 0% | 3% | 4% | 4% | 5% | hub 5% |
 | 10 | braked | 166,667 | beyond tested | 5.09 | 140 | 0.0 | 0.00 | 0.0 | 0 | 4% | 0% | 3% | 5% | 5% | 6% | hub 6% |

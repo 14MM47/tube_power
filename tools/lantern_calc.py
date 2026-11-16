@@ -82,8 +82,8 @@ class Design:
 
     # Neck and hub
     spider_mass: float = 0.015  # bottom-ring-to-neck spider, kg
-    neck_od: float = 0.030  # carbon neck tube outside diameter, m
-    neck_id: float = 0.028  # carbon neck tube inside diameter, m
+    neck_od: float = 0.035  # carbon neck tube outside diameter, m
+    neck_id: float = 0.032  # carbon neck tube inside diameter, m
     carbon_density: float = 1550.0  # kg/m^3
     carbon_E: float = 100e9  # Pa
     hub_mass: float = 0.15  # hub, axle, spring carriage, belt arc, kg
@@ -127,6 +127,10 @@ class Design:
     lock_band: float = 0.2  # lock-on reaches this fraction beyond the tuned speed (assumed)
     P_rated: float = 0.0  # electrical power cap, W (0 = output at U_tune_max)
     U_brake: float = 8.0  # brake at and above this wind, m/s (0 = U_tune_max x (1 + lock_band))
+    keep_generating: int = 0  # 0 = cap at rated power then brake; 1 = keep generating within every limit
+    U_tune_ext_max: float = 40.0  # highest wind the keep-generating control may retune to (springs rebuilt)
+    Re_harvest_max: float = 2.0e5  # no harvesting credit above this Re (drag crisis; shedding unreliable)
+    mode_margin: float = 1.5  # neck-tube bending frequency must exceed this x swing frequency
 
     # Limits
     U_storm: float = 25.0  # survival requirement (parked and braked), m/s
@@ -255,6 +259,37 @@ def gravity_stiffness(d: Design) -> float:
 
 def neck_I(d: Design) -> float:
     return math.pi / 64.0 * (d.neck_od**4 - d.neck_id**4)
+
+
+def neck_mode_freq(d: Design) -> float:
+    """First bending frequency of neck + tube with the hinge held rigid, Hz.
+
+    Two degrees of freedom at the neck tip (sideways movement and rotation);
+    the tube is a rigid body (with its added air) whose centre is L/2 above
+    the neck tip. Holding the hinge rigid gives a lower bound on the real
+    second mode, so the check is conservative.
+    """
+    m = masses(d)
+    a = max(d.neck, 1e-3)
+    e = d.L / 2.0
+    EI = d.carbon_E * neck_I(d)
+    k11, k12, k22 = 12 * EI / a**3, -6 * EI / a**2, 4 * EI / a
+    m_air = d.Ca * RHO * math.pi * d.D**2 / 4.0 * d.L
+    mt = m["shell"] + 2 * m["disc_each"] + m_air
+    J = ((m["shell"] + m_air) * d.L**2 / 12.0 + 2 * m["disc_each"] * e**2
+         + 2 * m["disc_each"] * (m["disc_dia"] / 2.0) ** 2 / 4.0)
+    m11 = mt + m["spider"] + 0.24 * m["neck"]
+    m12, m22 = mt * e, mt * e**2 + J
+    A = m11 * m22 - m12**2
+    B = -(k11 * m22 + k22 * m11 - 2 * k12 * m12)
+    C = k11 * k22 - k12**2
+    w2 = (-B - math.sqrt(B * B - 4 * A * C)) / (2 * A)
+    return math.sqrt(w2) / (2.0 * math.pi)
+
+
+def structural_tuning_limit(d: Design) -> float:
+    """Highest wind at which the swing stays below neck-mode frequency / margin, m/s."""
+    return neck_mode_freq(d) * d.D / (d.St * d.mode_margin)
 
 
 def wall_capacity(d: Design, core_t: float, sandwich: int) -> float:
@@ -398,12 +433,76 @@ def start_check(d: Design, U: float) -> tuple[bool, float, float]:
     return m_lift > t_static, m_lift, t_static
 
 
+def extended_tuning_max(d: Design) -> float:
+    """Highest wind the keep-generating control can tune to: springs permitting, neck mode limiting."""
+    return max(d.U_tune_min, min(d.U_tune_ext_max, structural_tuning_limit(d)))
+
+
+def harvest_reach(d: Design) -> float:
+    """Highest wind at which the keep-generating control can still lock on and harvest."""
+    return min(extended_tuning_max(d) * (1.0 + d.lock_band), d.Re_harvest_max * NU / d.D)
+
+
+def operate_limits(d: Design, U: float) -> dict:
+    """Keep-generating control: the most electrical power at wind U with every part within limits.
+
+    Retunes up to extended_tuning_max(), then rides the lock-on tail. At each
+    wind it searches generator damping (below and above the optimum) for the
+    highest output whose swinging loads all stay at or under 100%.
+    """
+    out: dict = {"U": U, "op": None, "limit": ""}
+    ok, m_lift, t_static = start_check(d, U)
+    if U < d.U_tune_min * (1.0 - d.lock_band) or not ok:
+        out["mode"] = "idle"
+        return out
+    u_tune = extended_tuning_max(d)
+    if U > harvest_reach(d):
+        out["mode"] = "braked"
+        if U * d.D / NU > d.Re_harvest_max:
+            out["limit"] = "drag crisis"
+        elif u_tune < d.U_tune_ext_max and u_tune == structural_tuning_limit(d):
+            out["limit"] = "neck mode"
+        else:
+            out["limit"] = "tuning range"
+        return out
+    opt = solve(d, U)
+    G = gear_ratio(d)
+    Is = inertias(d)["structural"]
+    ze0 = opt["zeta_e"]
+    ze_max = (G**2 * d.Ke**2 / d.R_coil) / (2.0 * Is * opt["w"]) * 0.999
+    cands = [ze0 * f for f in (0.2, 0.3, 0.45, 0.6, 0.75, 0.9)]
+    n = 22
+    cands += [ze0 * (ze_max / ze0) ** (i / (n - 1)) for i in range(n)] if ze_max > ze0 else [ze0]
+    mode = "tracking" if U <= u_tune else "lock-on tail"
+    best = None
+    worst_at_opt = ""
+    for ze in cands:
+        op = opt if ze == ze0 else solve(d, U, ze_fixed=ze)
+        lo = loads(d, U, {"mode": mode, "op": op})
+        if ze == ze0:
+            worst_at_opt = lo["worst"]
+        if lo["worst_util"] <= 1.0 and (best is None or op["p_elec"] > best[0]["p_elec"]):
+            best = (op, lo)
+    if best is None:
+        out["mode"] = "braked"
+        out["limit"] = worst_at_opt
+        return out
+    op, lo = best
+    out["op"] = op
+    out["mode"] = mode
+    if op["p_elec"] < 0.99 * opt["p_elec"]:
+        out["limit"] = lo["worst"]
+    return out
+
+
 def operate(d: Design, U: float) -> dict:
     """Operating mode and swing at wind speed U, following the control rules."""
     out: dict = {"U": U, "op": None}
     if U <= 0:
         out["mode"] = "calm"
         return out
+    if d.keep_generating:
+        return operate_limits(d, U)
     G = gear_ratio(d)
     Is = inertias(d)["structural"]
     if U >= brake_speed(d):
@@ -449,7 +548,7 @@ def operate(d: Design, U: float) -> dict:
     return out
 
 
-SWINGING = ("tracking", "power-capped")
+SWINGING = ("tracking", "power-capped", "lock-on tail")
 
 
 def loads(d: Design, U: float, state: dict | None = None) -> dict:
@@ -500,6 +599,7 @@ def loads(d: Design, U: float, state: dict | None = None) -> dict:
         "hub": m_drag_hinge / d.M_hinge_max,
         "voltage": emf / d.V_max,
         "generator heat": heat / d.gen_heat_max,
+        "neck mode": (d.mode_margin * op["f_osc"] / neck_mode_freq(d)) if swinging and st["mode"] in SWINGING else 0.0,
     }
     worst = max(utils, key=utils.get)
     return {
@@ -537,7 +637,7 @@ def operating_peak(d: Design) -> dict:
         if st["mode"] not in SWINGING:
             continue
         for k, v in loads(d, U, st)["utils"].items():
-            if k in ("neck fatigue", "neck", "skin", "voltage", "generator heat"):
+            if k in ("neck fatigue", "neck", "skin", "voltage", "generator heat", "neck mode"):
                 worst[k] = max(worst.get(k, 0.0), v)
     return worst
 
@@ -556,7 +656,7 @@ def annual_energy(d: Design, mean_wind: float, step: float = 0.25) -> float:
     """Central-case kWh/yr for a Rayleigh wind distribution at hub height."""
     total = 0.0
     U = step / 2.0
-    top = brake_speed(d)
+    top = harvest_reach(d) + step if d.keep_generating else brake_speed(d)
     while U < top:
         pdf = math.pi * U / (2 * mean_wind**2) * math.exp(-math.pi * U**2 / (4 * mean_wind**2))
         st = operate(d, U)
@@ -586,7 +686,9 @@ def size_neck(d: Design) -> Design:
     for od, idd in NECK_TUBES:
         t = replace(d, neck_od=od, neck_id=idd)
         surv, part, winds = survival(t)
-        if winds["neck"] >= d.U_storm and operating_peak(t).get("neck fatigue", 0.0) <= 1.0:
+        peak = operating_peak(t)
+        if (winds["neck"] >= d.U_storm and peak.get("neck fatigue", 0.0) <= 1.0
+                and peak.get("neck mode", 0.0) <= 1.0):
             return t
     od, idd = NECK_TUBES[-1]
     return replace(d, neck_od=od, neck_id=idd)
@@ -649,6 +751,92 @@ def envelope_table(d: Design, speeds) -> list[str]:
     return o
 
 
+CURVE_SPEEDS = [1, 2, 3, 4, 4.5, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17.5, 20, 25, 30, 35, 40]
+
+
+def curve_rows(d: Design, speeds) -> list[dict]:
+    """Power at each wind: wind through the tube, model potential, within limits, and as designed."""
+    rated = replace(d, keep_generating=0)
+    lim = replace(d, keep_generating=1)
+    rows = []
+    for U in speeds:
+        a = operate(rated, U)
+        b = operate(lim, U)
+        pa = a["op"]["p_elec"] if a["mode"] in SWINGING and a["op"] else 0.0
+        pb = b["op"]["p_elec"] if b["mode"] in SWINGING and b["op"] else 0.0
+        if b["mode"] in SWINGING:
+            why = ("limited by " + b["limit"]) if b["limit"] else "unconstrained"
+        else:
+            why = b["mode"] + (f" ({b['limit']})" if b.get("limit") else "")
+        rows.append({
+            "U": U,
+            "Re": U * d.D / NU,
+            "wind_W": wind_power(d, U),
+            "potential_W": solve(d, U)["p_elec"],
+            "within_limits_W": pb,
+            "within_limits_mode": b["mode"],
+            "within_limits_note": why,
+            "within_limits_swing_deg": b["op"]["theta_deg"] if b["op"] and b["mode"] in SWINGING else 0.0,
+            "as_designed_W": pa,
+            "as_designed_mode": a["mode"],
+        })
+    return rows
+
+
+def curve_summary(d: Design) -> list[str]:
+    lim = replace(d, keep_generating=1)
+    rated = replace(d, keep_generating=0)
+    rows = curve_rows(d, [round(0.5 + 0.25 * i, 2) for i in range(159)])
+    pk = max(rows, key=lambda r: r["within_limits_W"])
+    gen = [r["U"] for r in rows if r["within_limits_W"] > 0.01]
+    return [
+        f"- Neck-tube bending mode about {f2(neck_mode_freq(d),1)} Hz, so the swing must stay below "
+        f"{f2(neck_mode_freq(d)/d.mode_margin,1)} Hz: retuning is possible up to {f2(extended_tuning_max(d),1)} m/s",
+        f"- As designed: generates {f2(cut_in(rated),1)}-{f2(brake_speed(rated),1)} m/s, peak {f2(rated_power(rated),2)} W, braked above",
+        f"- Kept generating within every limit: generates {f2(min(gen),1) if gen else 'n/a'}-{f2(max(gen),1) if gen else 'n/a'} m/s, "
+        f"peak {f2(pk['within_limits_W'],2)} W at {pk['U']:g} m/s; nothing above {f2(harvest_reach(lim),1)} m/s",
+        "- Yearly energy, central case (kWh): " + "; ".join(
+            f"{V} m/s site: as designed {f2(annual_energy(rated, V),1)}, within limits {f2(annual_energy(lim, V),1)}"
+            for V in (3.5, 4.5, 5.5, 6.5)),
+    ]
+
+
+def curve_table(d: Design, speeds) -> list[str]:
+    o = ["| Wind (m/s) | Re | Flow | Wind through tube (W) | Model potential (W) | Within limits (W) | "
+         "Within limits: what governs | As designed (W) | As designed: mode |",
+         "|" + "---|" * 9]
+    for r in curve_rows(d, speeds):
+        o.append(
+            f"| {r['U']:g} | {r['Re']:,.0f} | {regime(r['Re'], d)} | {r['wind_W']:,.1f} | {r['potential_W']:,.2f} | "
+            f"{r['within_limits_W']:.2f} | {r['within_limits_note']} | {r['as_designed_W']:.2f} | {r['as_designed_mode']} |"
+        )
+    return o
+
+
+def curve_report(d: Design, step: float, top: float, start: float) -> str:
+    n = int(round((top - start) / step))
+    speeds = [round(start + i * step, 3) for i in range(n + 1)]
+    o = [f"# Lantern power curve, {start:g}-{top:g} m/s\n",
+         "Model potential: the model's output if the tube stayed tuned and locked on with the best generator "
+         "load and nothing failed (not achievable). Within limits: the most the machine can deliver with every "
+         "part within its limits, retuning as far as the neck's bending mode allows and riding the lock-on tail "
+         "beyond that. As designed: the default control (track to 7 m/s, cap to 8 m/s, brake above).\n"]
+    o += curve_summary(d)
+    o.append("")
+    o += curve_table(d, speeds)
+    return "\n".join(o)
+
+
+def write_curve_csv(d: Design, path: str, step: float, top: float, start: float) -> None:
+    n = int(round((top - start) / step))
+    rows = curve_rows(d, [round(start + i * step, 3) for i in range(n + 1)])
+    with open(path, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        for r in rows:
+            w.writerow({k: (round(v, 4) if isinstance(v, float) else v) for k, v in r.items()})
+
+
 def summary_lines(d: Design) -> list[str]:
     surv, part, winds = survival(d)
     ci = cut_in(d)
@@ -661,6 +849,8 @@ def summary_lines(d: Design) -> list[str]:
         f"- Survives (parked, braked) up to **{f2(surv,1)} m/s**, limited by the {part}. "
         f"Requirement: {d.U_storm:g} m/s. Per part: " + ", ".join(f"{k} {f2(v,0)}" for k, v in winds.items()),
         "- Worst while swinging: " + (", ".join(f"{k} {pct(v)}" for k, v in op.items()) or "n/a"),
+        f"- Neck-tube bending mode about {f2(neck_mode_freq(d),1)} Hz (swing must stay below "
+        f"{f2(neck_mode_freq(d)/d.mode_margin,1)} Hz, reached at {f2(structural_tuning_limit(d),1)} m/s)",
     ]
 
 
@@ -742,6 +932,15 @@ def report(d: Design) -> str:
              "on the end discs. Parked modes use drag coefficient "
              f"{d.Cd_storm}; swinging modes {d.Cd_viv}.\n")
     o += envelope_table(d, ENVELOPE_SPEEDS)
+    o.append("")
+
+    o.append("## Power from 1 to 40 m/s\n")
+    o.append("Model potential = output if the tube stayed tuned and locked on with nothing failing (not achievable). "
+             "Within limits = the most it can deliver with every part within limits, retuning as far as the neck's "
+             "bending mode allows. As designed = the default control.\n")
+    o += curve_summary(d)
+    o.append("")
+    o += curve_table(d, CURVE_SPEEDS)
     o.append("")
 
     o.append(f"## Structure at the survival requirement ({d.U_storm:g} m/s, parked and braked)\n")
@@ -996,6 +1195,12 @@ def main() -> None:
     pe.add_argument("--to", dest="top", type=float, default=40.0)
     pe.add_argument("--step", type=float, default=1.0)
     pe.add_argument("--csv", default=None, help="also write the envelope to this CSV file")
+    pc = sub.add_parser("curve", help="electrical power from 1 to 40 m/s: as designed, within limits, potential")
+    add_design_args(pc)
+    pc.add_argument("--from", dest="start", type=float, default=1.0)
+    pc.add_argument("--to", dest="top", type=float, default=40.0)
+    pc.add_argument("--step", type=float, default=1.0)
+    pc.add_argument("--csv", default=None, help="also write the curve to this CSV file")
     ps = sub.add_parser("sweep", help="grid search for the highest-output design")
     add_design_args(ps)
     ps.add_argument("--objective", choices=("power", "annual"), default="power")
@@ -1021,6 +1226,10 @@ def main() -> None:
     d = design_from(args) if args.cmd else Design()
     if args.cmd == "sweep":
         print(sweep(d, args))
+    elif args.cmd == "curve":
+        if args.csv:
+            write_curve_csv(d, args.csv, args.step, args.top, args.start)
+        print(curve_report(d, args.step, args.top, args.start))
     elif args.cmd == "envelope":
         if args.csv:
             write_envelope_csv(d, args.csv, args.step, args.top, args.start)

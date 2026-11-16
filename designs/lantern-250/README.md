@@ -1,6 +1,6 @@
 # Lantern 250
 
-**A 1 m tall bladeless wind generator: a light 250 mm foam drum that swings in the wind and drives one small generator through a toothed belt.** It generates from about 2 m/s to 8 m/s. Configuration C survives 40 m/s.
+**A 1 m tall bladeless wind generator: a light 250 mm foam drum that swings in the wind and drives one small generator through a toothed belt.** As designed it generates from about 2 m/s to 8 m/s; with the keep-generating control it can run to about 11 m/s. Configuration C survives 40 m/s.
 
 The name comes from its look: a thin, pale cylinder with a disc at each end, like a paper lantern on a stick. The number is the tube diameter in millimetres.
 
@@ -22,16 +22,18 @@ Related documents:
 | Use | Attended, or lowered for storms over 25 m/s | Left up year-round, survives 40 m/s | Reference |
 | Tube | Ø250 × 1,000 mm, 3 mm foam, glass both faces | Ø250 × 1,000 mm, 5 mm foam, glass both faces, outer skin thickened near the base | as B |
 | End discs | Ø500 mm, built like the shell | Ø500 mm, built like the shell | Ø400 mm |
-| Neck (hinge to tube bottom) | 800 mm, 30 × 28 mm carbon | 600 mm, 35 × 32 mm carbon | 400 mm, 25 × 23 mm |
+| Neck (hinge to tube bottom) | 800 mm, 35 × 32 mm carbon | 600 mm, 35 × 32 mm carbon | 400 mm, 25 × 23 mm |
 | Hub and hinge | 12 mm axle, bushings 150 mm apart, built for 150 N·m | 16 mm axle, bushings 200 mm apart, built for 350 N·m | 10 mm axle, 100 mm apart, 150 N·m |
 | Drive | GT2 belt, 26:1 (12-tooth pulley) | same | 19.6:1 (16-tooth) |
 | Generator | 5208-size brushless gimbal motor | same | same |
-| Swinging mass / mass ratio | 0.55 kg / 5.3 | 0.86 kg / 7.7 | 0.45 kg / 4.7 |
-| Generates | 1.6–8 m/s | 1.6–8 m/s | 1.6–8 m/s |
+| Swinging mass / mass ratio | 0.63 kg / 5.5 | 0.86 kg / 7.7 | 0.45 kg / 4.7 |
+| Generates, as designed | 1.6–8 m/s | 1.6–8 m/s | 1.6–8 m/s |
+| Generates, kept generating within limits | 1.8–10.8 m/s, peak 23.6 W | 1.8–11 m/s, peak 26.3 W | 1.8–9.8 m/s, peak 15.1 W |
 | **Electrical at 4.5 m/s** | **2.0 W** (low case 1.0) | **1.8 W** (low case 0.9) | 1.6 W (low case 0.8) |
 | Electrical at 7 m/s (rated) | 7.4 W | 7.0 W | 5.9 W |
 | Survives, parked and braked | **25 m/s** (limited by hub) | **42 m/s** (limited by hub) | 30 m/s (limited by hub) |
-| Energy at a 4.5 m/s-mean site | ~9 kWh/yr (low case ~5) | ~8.5 kWh/yr (low case ~4) | ~7 kWh/yr (low case ~4) |
+| Energy at a 4.5 m/s-mean site, as designed | ~9 kWh/yr (low case ~5) | ~8.5 kWh/yr (low case ~4) | ~7 kWh/yr (low case ~4) |
+| Energy at a 4.5 m/s-mean site, kept generating | ~15 kWh/yr | ~14 kWh/yr | — |
 
 B and C came out of grid searches over tens of thousands of designs: B with a 25 m/s survival requirement, C with 40 m/s ([section 13](#13-optimisation-results)). A is the version first worked out in conversation, with every later correction applied.
 
@@ -42,6 +44,14 @@ For scale: a 100 W solar panel gives roughly 90–150 kWh a year. The Lantern is
 ```bash
 python3 tools/lantern_calc.py envelope --config C
 ```
+
+**To see its electrical power at every wind speed from 1 to 40 m/s** (as designed, kept generating within limits, model potential and the wind passing the tube):
+
+```bash
+python3 tools/lantern_calc.py curve --config C
+```
+
+The same curves are drawn for the configurations and the best grid designs on the [Lantern Design Grid page](https://claude.ai/artifact/7coCWJAdK3jhA8j6H4RN1b) (private until shared).
 
 ---
 
@@ -107,20 +117,20 @@ View is from the side, wind from the left. In operation the tube rocks in and ou
 | Tube shell (incl. rings, seams) | 3 mm extruded polystyrene (model-aircraft foam, ~37 kg/m³), ~25 g/m² glass tissue in epoxy **on both faces**: 0.186 kg | 5 mm foam, glass both faces, outer skin built up to ~0.15 mm effective at the base and tapering upward: 0.285 kg |
 | End discs, each | Ø500 mm, same construction as the shell: 0.041 kg | Ø500 mm, 5 mm sandwich: 0.056 kg |
 | Bottom spider | 0.015 kg | 0.015 kg |
-| Neck | 30 × 28 mm carbon, 800 mm: 0.113 kg | 35 × 32 mm carbon, 600 mm: 0.147 kg |
+| Neck | 35 × 32 mm carbon, 800 mm: 0.196 kg | 35 × 32 mm carbon, 600 mm: 0.147 kg |
 | Hub assembly | ~0.15 kg | ~0.30 kg (16 mm axle, wider bushings) |
-| **Total swinging mass** | **0.547 kg** | **0.859 kg** |
+| **Total swinging mass** | **0.629 kg** | **0.859 kg** |
 
 | Inertia about the hinge (kg·m²) | B | C |
 |---|---|---|
 | Shell | 0.329 | 0.369 |
 | End discs | 0.162 | 0.165 |
-| Spider, neck, hub | 0.035 | 0.025 |
+| Spider, neck, hub | 0.052 | 0.025 |
 | Generator rotor seen through the 26:1 belt | 0.041 | 0.041 |
-| **Structural total** | **0.567** | **0.600** |
+| **Structural total** | **0.585** | **0.600** |
 | Air moving with the tube | 0.107 | 0.078 |
-| **Total** | **0.674** | **0.678** |
-| Mass ratio | **5.3** | **7.7** |
+| **Total** | **0.691** | **0.678** |
+| Mass ratio | **5.5** | **7.7** |
 
 ---
 
@@ -134,24 +144,31 @@ The controller chooses a mode from the wind speed (2-minute average for tuning, 
 | ~1.6–2 m/s | Tracking (lower edge) | Carriage at its softest; lock-on reaches about 20% below the tuned speed |
 | 2–7 m/s | **Tracking** | Carriage moved about 20 mm per 1 m/s to keep the tube tuned. MPPT controller sets the generator load for the most power |
 | 7–8 m/s | **Power-capped** | Carriage held at its stiffest. Controller raises the generator load to hold output at the 7 m/s value (7.4 W for B), which shrinks the swing |
-| 8 m/s and above | **Braked** | Generator phases shorted (or through a braking resistor). Carriage at its stiffest. Above about 8.4 m/s the vortices can't lock on to the tube in any case |
+| 8 m/s and above | **Braked** | Generator phases shorted (or through a braking resistor). Carriage at its stiffest. Above about 8.4 m/s the vortices can't lock on at this tuning. The keep-generating option below runs on to ~11 m/s instead |
 | Up to 25 m/s (B) or 42 m/s (C) | Survive | Braked and parked. Structure carries drag and gust loads |
 
 **Starting.** At 2 m/s the wind's initial push on a still tube is only ~0.2 N·m. Generator drag (~0.1 N·m at the hinge) plus cogging (~0.13 N·m) is about the same. So the controller **kick-starts**: the active rectifier is a three-phase bridge, so it can briefly drive the motor and push the tube into swinging. With kick-start, cut-in is about 1.6 m/s; without it, about 2.1 m/s (B) or 2.3 m/s (C). Light winds add little energy (extending tuning from 3 down to 2 m/s adds about 0.1 kWh a year), so this matters more for responsiveness than output.
 
-**Why brake at 8 m/s, not higher.**
+**Why the default control brakes at 8 m/s.**
 - Above 7 m/s the flow is beyond the tested evidence (Reynolds number over 120,000).
 - Holding power at the 7 m/s value means extra generator load, which heats the windings. The model reaches the assumed 5 W limit near 8.4 m/s.
-- If left to run at full output, the loads climb fast. For B at 10 m/s: about 20 W, but a 155 N·m cyclic bending moment in the neck (it is 75 N·m at 7 m/s), 54 g at the top of the tube and 59 V peak.
+
+**Option: keep generating within limits.** With `--keep_generating 1` the controller keeps going above 7 m/s instead of capping and braking:
+- It retunes as far as the neck's bending frequency allows: about 12 m/s for B, 13 m/s for C.
+- It then rides the lock-on tail.
+- At every wind speed it picks the generator load that gives the most power with every part within its limits: neck peak and fatigue, neck bending mode, skin, voltage, generator heat, hub.
+- It stops where no load keeps everything within limits (the generator's heat limit, just under 11 m/s for B and above 11 m/s for C), and in any case at Reynolds number 200,000 (12 m/s), where the drag crisis makes vortex shedding unreliable.
+
+The option roughly doubles peak power and adds ~60% to yearly energy at a 4.5 m/s site, but it runs the tube in flow nobody has tested. Prove it on the rig before relying on it. See [section 12](#12-expected-performance) for the power curves to 40 m/s.
 
 **Configuration B envelope** (excerpt from [calculator-output/envelope-B.md](calculator-output/envelope-B.md)). Utilisation is load divided by allowable; over 100% fails.
 
 | Wind (m/s) | Mode | Swing | Electrical | Top accel. | Neck fatigue | Worst part |
 |---|---|---|---|---|---|---|
-| 2 | tracking | ±5.3° | 0.13 W | 1.7 g | 4% | voltage 6% |
-| 4.5 | tracking | ±6.5° | 2.01 W | 10.6 g | 24% | neck fatigue 24% |
-| 7 | tracking | ±6.7° | 7.41 W | 26.4 g | 59% | neck fatigue 59% |
-| 7.5 | power-capped | ±5.2° | 7.41 W | 23.7 g | 53% | generator heat 59% |
+| 2 | tracking | ±5.3° | 0.13 W | 1.7 g | 2% | neck mode 17% |
+| 4.5 | tracking | ±6.5° | 2.00 W | 10.6 g | 12% | neck mode 37% |
+| 7 | tracking | ±6.6° | 7.38 W | 26.3 g | 31% | neck mode 58% |
+| 7.5 | power-capped | ±5.2° | 7.38 W | 23.6 g | 28% | neck mode 62% |
 | 10 | braked | — | 0 | — | — | hub 16% |
 | 20 | braked | — | 0 | — | — | hub 64% |
 | 25 | braked | — | 0 | — | — | **hub 100%** |
@@ -182,7 +199,7 @@ Survival case: parked and braked, drag coefficient 1.2 at every wind speed (no c
 | Drag on the tube | 115 N | 294 N |
 | Bending moment at the tube base | 57 N·m | 147 N·m |
 | Bending moment at the hinge | 149 N·m (hub built for 150) | 323 N·m (hub built for 350) |
-| Neck stress (allowable 400 MPa) | 234 MPa | 255 MPa |
+| Neck stress (allowable 400 MPa) | 118 MPa | 255 MPa |
 | Skin stress at the tube base (allowable 40 MPa) | 23 MPa | 20 MPa |
 | Shell ovalling, demand / wall capacity | 3.0 / 6.0 N·m/m | 7.7 / 10.0 N·m/m |
 | End-disc gust lift, utilisation | 55% | 84% |
@@ -193,7 +210,8 @@ Points to note:
 - **The shell needs glass on both faces.** At 40 m/s the sides of the tube see about −2 kPa of suction, and the windward face +1 kPa, which squeezes the tube oval. A single-skin foam wall has little resistance to that. With an outer skin only, B would survive just 15 m/s (wall and discs both limit). The inner skin adds about 40 g to B's shell and costs ~2% of output.
 - **End discs see gust lift.** A ~10° gust hitting a 500 mm disc pushes it with ~210 N at 40 m/s. Discs are built like the shell wall, and C's 5 mm sandwich keeps them at 84% of capacity.
 - **The neck must be a tube, not thin rods.** Three 4 mm carbon rods (the first idea) would buckle in about 10 m/s of wind. The calculator's grid search picks the lightest standard tube that survives the storm requirement and the swing fatigue.
-- **Neck fatigue governs while swinging.** The swing bends the neck about 3 × 10⁷ times a year. For B the cyclic stress peaks at 59% of the assumed 200 MPa allowable, at 7 m/s.
+- **The neck's own bending frequency limits how fast the tube may swing.** Neck and tube together bend at about 14.5 Hz (B) or 16 Hz (C), estimated with the hinge held rigid, which gives a lower bound. The swing must stay below that ÷ 1.5. That caps tuning at about 12 m/s for B and 13 m/s for C. The 30 × 28 mm neck first specified for B bends at only 9.6 Hz, which would have capped it at 8 m/s; B now has a 35 × 32 mm neck.
+- **Neck fatigue while swinging.** The swing bends the neck about 3 × 10⁷ times a year. With the stiffer neck, B's cyclic stress peaks at 31% of the assumed 200 MPa allowable.
 - **Never lock the hinge rigidly in a storm.** Locked, the neck and tube vibrate at about 11 Hz, and vortices match that at about 13 m/s. Leave the hinge on its springs, with the generator braked.
 - **Drag acts along the hinge axle**, not about it, because the axle points into the wind. It loads the bushings, hub and post, not the springs.
 - **The post** must be designed to local wind codes for the moments above. For C, use a guyed post.
@@ -222,18 +240,18 @@ The tube must be tuned so its swing frequency matches the vortex-shedding freque
 **Mechanism:**
 - Two opposing springs act on a carriage that slides along a lever below the hinge.
 - Their stiffness about the hinge is 2 × spring rate × r², where r is the carriage's distance from the hinge. So frequency rises in proportion to r, and **the carriage position is a linear wind-speed scale**.
-- Springs: two, each **17.7 N/mm** for B (17.8 for C, 8.0 for A), preloaded more than their travel at the ±14° stops (~35 mm at r = 140 mm).
+- Springs: two, each **18.2 N/mm** for B (17.8 for C, 8.0 for A), preloaded more than their travel at the ±14° stops (~35 mm at r = 140 mm).
 - Carriage drive: T8 lead screw with 2 mm per turn (holds position without power) and a small stepper motor.
 
 | Wind (m/s) | Tune to f_n (Hz) | Stiffness needed, B (N·m/rad) | Carriage below hinge (mm) |
 |---|---|---|---|
-| 2.0 | 1.45 | 60 | 41 |
-| 3.0 | 2.18 | 131 | 61 |
-| 4.0 | 2.91 | 229 | 80 |
-| 4.5 | 3.27 | 289 | 90 |
-| 5.0 | 3.64 | 356 | 100 |
-| 6.0 | 4.36 | 510 | 120 |
-| 7.0 | 5.09 | 693 | 140 |
+| 2.0 | 1.45 | 62 | 41 |
+| 3.0 | 2.18 | 134 | 61 |
+| 4.0 | 2.91 | 235 | 80 |
+| 4.5 | 3.27 | 297 | 90 |
+| 5.0 | 3.64 | 365 | 100 |
+| 6.0 | 4.36 | 524 | 120 |
+| 7.0 | 5.09 | 712 | 140 |
 
 That is about **20 mm of carriage per 1 m/s**, the same for A, B and C. The lock-on band is probably about ±20% of the tuned speed (estimate; measure it), so ±5–10 mm of carriage error is tolerable.
 
@@ -299,31 +317,63 @@ That is about **20 mm of carriage per 1 m/s**, the same for A, B and C. The lock
 
 Model central case while swinging. Low case = half.
 
-| Electrical power | 2 m/s | 3 m/s | 4.5 m/s | 6 m/s | 7 m/s | 7–8 m/s |
+| Electrical power, as designed | 2 m/s | 3 m/s | 4.5 m/s | 6 m/s | 7 m/s | 7–8 m/s |
 |---|---|---|---|---|---|---|
-| **B** | 0.13 W | 0.56 W | **2.01 W** | 4.74 W | 7.41 W | capped 7.41 W |
+| **B** | 0.13 W | 0.56 W | **2.00 W** | 4.72 W | 7.38 W | capped 7.38 W |
 | **C** | 0.10 W | 0.49 W | **1.84 W** | 4.41 W | 6.97 W | capped 6.97 W |
 | A | 0.10 W | 0.43 W | 1.57 W | 3.73 W | 5.86 W | capped 5.86 W |
 
 | B in detail | 3 m/s | 4.5 m/s | 6 m/s | 7 m/s |
 |---|---|---|---|---|
 | Wind power through the tube | 4.1 W | 14.0 W | 33.1 W | 52.5 W |
-| Mechanical capture | 0.73 W (18%) | 2.71 W (19%) | 6.62 W (20%) | 10.6 W (20%) |
-| Hinge swing | ±6.2° | ±6.5° | ±6.6° | ±6.7° |
-| Peak hinge torque | 0.90 N·m | 2.11 N·m | 3.81 N·m | 5.20 N·m |
-| Generator peak rpm / EMF | 405 / 16 V | 640 / 26 V | 870 / 35 V | 1,020 / 41 V |
+| Mechanical capture | 0.73 W (18%) | 2.70 W (19%) | 6.60 W (20%) | 10.6 W (20%) |
+| Hinge swing | ±6.1° | ±6.5° | ±6.6° | ±6.6° |
+| Peak hinge torque | 0.90 N·m | 2.11 N·m | 3.80 N·m | 5.20 N·m |
+| Generator peak rpm / EMF | 404 / 16 V | 640 / 26 V | 868 / 35 V | 1,019 / 41 V |
 
-B's tube swing at 4.5 m/s: ±91 mm at the bottom, ±148 mm mid-height, ±205 mm at the top.
+B's tube swing at 4.5 m/s: ±91 mm at the bottom, ±148 mm mid-height, ±204 mm at the top.
 
-**Annual energy.** Rayleigh wind distribution at hub height, power curve from the operating modes above, half the swinging time locked on.
+### Electrical power from 1 to 40 m/s
 
-| Site mean wind | B central | B low | C central | C low | A central |
-|---|---|---|---|---|---|
-| 3.5 m/s | 6.5 kWh | 3.2 kWh | 5.9 kWh | 3.0 kWh | 5.1 kWh |
-| 4.5 m/s | 9.1 kWh | 4.6 kWh | 8.5 kWh | 4.2 kWh | 7.2 kWh |
-| 5.5 m/s | 9.9 kWh | 5.0 kWh | 9.2 kWh | 4.6 kWh | 7.8 kWh |
+Four curves for each design, from `python3 tools/lantern_calc.py curve` (full tables in [calculator-output/curve-B.md](calculator-output/curve-B.md) and [curve-C.md](calculator-output/curve-C.md); CSVs at 0.5 m/s steps):
+- **As designed:** the default control (track to 7 m/s, cap to 8 m/s, brake above).
+- **Kept generating within limits:** the keep-generating option (section 6).
+- **Model potential:** what the model says the tube would make if it stayed tuned and locked on with nothing failing. Not achievable; shown to make clear what is left on the table.
+- **Wind passing the tube:** ½ρU³ × D × L.
 
-Annual energy rises slowly above a 4.5 m/s site mean because output is capped at 7 m/s and braked from 8 m/s.
+| Wind (m/s) | Wind through tube | B potential | **B kept generating** | **B as designed** | C potential | **C kept generating** | **C as designed** | What stops the keep-generating control |
+|---|---|---|---|---|---|---|---|---|
+| 2 | 1.2 W | 0.13 W | 0.14 W | 0.13 W | 0.10 W | 0.11 W | 0.10 W | — |
+| 4.5 | 14.0 W | 2.00 W | 2.03 W | 2.00 W | 1.84 W | 1.86 W | 1.84 W | — |
+| 7 | 52.5 W | 7.38 W | 7.53 W | 7.38 W | 6.97 W | 7.06 W | 6.97 W | — |
+| 8 | 78 W | 10.8 W | 11.1 W | 0 | 10.3 W | 10.5 W | 0 | — |
+| 9 | 112 W | 15.0 W | 15.6 W | 0 | 14.5 W | 14.7 W | 0 | — |
+| 10 | 153 W | 20.1 W | 20.5 W | 0 | 19.6 W | 20.0 W | 0 | — |
+| 11 | 204 W | 26.1 W | 0 | 0 | 25.6 W | 26.3 W | 0 | B: generator heat |
+| 12 | 265 W | 33.0 W | 0 | 0 | 32.7 W | 0 | 0 | Generator heat |
+| 15 | 517 W | 59 W | 0 | 0 | 60 W | 0 | 0 | Drag crisis (Re > 200,000) |
+| 20 | 1,225 W | 117 W | 0 | 0 | 128 W | 0 | 0 | Drag crisis |
+| 30 | 4,134 W | 240 W | 0 | 0 | 330 W | 0 | 0 | Drag crisis |
+| 40 | 9,800 W | 202 W | 0 | 0 | 538 W | 0 | 0 | Drag crisis |
+
+What the curves show:
+- **Nothing generates above about 11 m/s.** The swing could in principle make tens to hundreds of watts, but three things stop it:
+  - the generator's heat limit (a bigger generator would move it a little),
+  - the neck's bending frequency (it caps retuning at 12–13 m/s),
+  - from 12 m/s, the drag crisis, where shedding from a smooth round tube becomes weak and irregular.
+- The potential curve flattens and falls at the top end because even this generator's maximum load can't damp the swing efficiently there.
+- To harvest strong winds the machine would need a different mechanism: a galloping section, whose output keeps rising with wind, or a bladed rotor. See section 14.
+
+**Annual energy.** Rayleigh wind distribution at hub height, half the swinging time locked on.
+
+| Site mean wind | B as designed | B low | B kept generating | C as designed | C low | C kept generating | A as designed |
+|---|---|---|---|---|---|---|---|
+| 3.5 m/s | 6.4 kWh | 3.2 kWh | 7.7 kWh | 5.9 kWh | 3.0 kWh | 7.2 kWh | 5.1 kWh |
+| 4.5 m/s | 9.1 kWh | 4.5 kWh | 14.7 kWh | 8.5 kWh | 4.2 kWh | 14.0 kWh | 7.2 kWh |
+| 5.5 m/s | 9.9 kWh | 4.9 kWh | 20.8 kWh | 9.2 kWh | 4.6 kWh | 20.3 kWh | 7.8 kWh |
+| 6.5 m/s | 9.5 kWh | — | 24.3 kWh | 8.9 kWh | — | 24.1 kWh | — |
+
+As designed, annual energy rises slowly above a 4.5 m/s site mean because output is capped at 7 m/s and braked from 8 m/s. Keeping it generating to ~11 m/s is worth far more at windy sites.
 
 ---
 
@@ -337,12 +387,12 @@ Annual energy rises slowly above a 4.5 m/s site mean because output is capped at
 - End-disc ratio 1.0 (none) to 2.4
 - Shell: five constructions (2, 3 or 5 mm foam; outer skin only, both faces, or storm-thickened)
 - Pulley 10–24 teeth
-- Neck tube: sized automatically to the lightest standard carbon tube that passes
+- Neck tube: sized automatically to the lightest standard carbon tube that passes (strength, fatigue and bending mode)
 
 **Limits:**
 - Reynolds number at 7 m/s ≤ 120,000 (the tested range of the evidence)
 - Survives the storm requirement parked and braked (neck, skin, wall, discs, hub)
-- Swinging loads (neck fatigue and peak, skin, voltage, generator heat) within limits up to the brake speed
+- Swinging loads (neck fatigue, peak and bending mode, skin, voltage, generator heat) within limits up to the brake speed
 - Total height ≤ 2 m
 - Generator strong enough to provide the optimum damping
 
@@ -350,9 +400,9 @@ Annual energy rises slowly above a 4.5 m/s site mean because output is capped at
 
 | Survival requirement | Best design in the grid | Electrical at 4.5 m/s | Configuration chosen |
 |---|---|---|---|
-| 25 m/s | 250 mm, 800 mm neck (25 × 23 tube), 2.0× discs, 3 mm sandwich shell, 10-tooth pulley | 2.05 W | **B**: same, but a 30 × 28 neck for margin (neck survives 33 m/s) and a 12-tooth pulley (common part): 2.01 W |
+| 25 m/s | 250 mm, 800 mm neck (35 × 32 tube), 2.0× discs, 3 mm sandwich shell, 10-tooth pulley | 2.04 W | **B**: identical except a 12-tooth pulley (common part): 2.00 W |
 | 40 m/s | 250 mm, 650 mm neck (35 × 32 tube), 2.0× discs, 5 mm storm shell, 10-tooth pulley | 1.87 W | **C**: 600 mm neck and 12-tooth pulley: 1.84 W |
-| 25 m/s, ranked by yearly energy at a 4.5 m/s site | Same as the power winner | 9.4 kWh/yr | — |
+| 25 m/s, ranked by yearly energy at a 4.5 m/s site (default control) | Same as the power winner | 9.4 kWh/yr | — |
 | Relaxed: Reynolds ≤ 200,000 and hub built for 250 N·m | 400 mm, 500 mm neck, 5 mm sandwich shell | 2.98 W | Untested territory ([sweep-relaxed-limits.md](calculator-output/sweep-relaxed-limits.md)) |
 
 **Surviving 40 m/s instead of 25 m/s costs about 9% of output at 4.5 m/s.** The storm shell and stronger neck add mass, and the hub limit forces a shorter neck.
@@ -363,9 +413,9 @@ Annual energy rises slowly above a 4.5 m/s site mean because output is capped at
 |---|---|---|
 | Diameter | +4% per 10 mm | The Reynolds limit at 250 mm (larger sizes also fail survival at the hub) |
 | Neck length | 0 mm −46%, 400 mm −14%, 600 mm −5% | The hub's 150 N·m storm limit at 800 mm |
-| End discs | 1.4× −14%, 1.6× −9%, 1.8× −4% | Flat beyond 2.0×; 2.4× fails survival (disc gust lift). **The gain follows directly from the assumed end-loss model and must be tested.** |
+| End discs | 1.4× −13%, 1.6× −9%, 1.8× −4% | Flat beyond 2.0×; 2.4× fails survival (disc gust lift). **The gain follows directly from the assumed end-loss model and must be tested.** |
 | Pulley teeth | 12 teeth −2%, 16 −8%, 20 −18% | 10 teeth is the smallest practical GT2 pulley |
-| Shell | Single-skin shells +2–3% but fail survival (wall ovalling at ~15 m/s); 5 mm sandwich −3%, storm shell −4% | Survival requirement |
+| Shell | Single-skin shells +2–4% but fail survival (wall ovalling at ~15 m/s); 5 mm sandwich −3%, storm shell −4% | Survival requirement |
 
 **How far to trust it.** The optimiser always pushes to whichever edge the model rewards. The diameter and neck results follow from well-understood physics (more wind, more even swing). The disc result is only as good as the end-loss assumption.
 
@@ -380,7 +430,8 @@ Annual energy rises slowly above a 4.5 m/s site mean because output is capped at
 | Galloping cross-section (triangle, D-section) | No tuning needed and power keeps rising with wind. Quasi-steady theory gives ceilings of about 25% (triangle) and 54% (D-section), but measured magnet-and-coil galloping efficiency is very low (0.045% in one wind-tunnel test) and it needs storm parking. Worth a later experiment |
 | Roughness strips on the round tube | Gave Michigan's 28% in water and extends output above the tuned band. A cheap second-stage experiment; needs wider stops and the brake |
 | Flapping wing with pitch control | A two-wing water prototype measured 40%. A 1 m wing sweeping ±0.5 m could give ~16 W at 4.5 m/s, but it isn't a tube |
-| Generating above 8 m/s | Output would keep rising (~20 W at 10 m/s for B), but neck fatigue, generator heat, voltage and tip acceleration all rise faster, and the flow is beyond the tested range |
+| Generating above 8 m/s by default | The keep-generating option does this within every limit, to ~11 m/s, but in untested flow. It stays an option until the rig proves it |
+| Generating above ~12 m/s | The generator's heat limit, the neck's bending mode and the drag crisis all stop a VIV tube there. Strong winds need a mechanism whose output keeps rising with wind (galloping section) or a rotor |
 | Locking the hinge in storms | The locked neck resonates with vortices at ~13 m/s. Brake on the springs instead |
 | Two swing axes, no vane | Needs a second belt and generator; one axis is simpler and matches the published tests |
 | Slim stiff masts (PVC, carbon, 40 mm) | High mass ratio; 0.02–0.35 W ([design history](../../docs/design-history.md)) |
@@ -393,11 +444,13 @@ Annual energy rises slowly above a 4.5 m/s site mean because output is capped at
 2. **The amplitude model is used outside its calibration.** The Skop–Griffin relation was fitted to high-mass-ratio data. Its zero-friction limits (16% for a base-hinged tube, 29% for parallel motion) match published theory and measurements, but at a mass ratio of 5–8 it is an extrapolation.
 3. **The lock-on band width is assumed** (±20%). It sets the power-capped band and where the brake must take over.
 4. **End-disc and end-loss behaviour is assumed** (half a diameter lost per bare end, none at discs of 2 × diameter).
-5. **Storm behaviour above Re ≈ 200,000** (12–40 m/s for this tube): the "drag crisis" lowers drag and weakens vortex shedding for smooth cylinders, but turbulence, roughness and the end discs change that. The structural checks take no credit for it. The neck's second bending mode may fall in the 15–30 Hz range, where shedding at 20–40 m/s could reach it and the brake barely damps it. Tap-test the built rig.
-6. **Wall ovalling and disc gust models are simple estimates** (ring bending under the pressure distribution; flat-plate lift for a 10° gust).
-7. **Generator cogging and heat.** Measure cogging and drag before building; the 5 W winding limit is assumed.
-8. **Durability:** shell and skin under 3 × 10⁷ swing cycles a year plus UV and hail; belt life at the reversals; bushing wear.
-9. **Icing:** ice changes the shape and can cause galloping. Brake when icing is likely.
+5. **The keep-generating option runs in untested flow** (Reynolds numbers 120,000–200,000, 7–12 m/s) and depends on the assumed lock-on reach and the neck-mode estimate. Its extra energy is the least certain number here.
+6. **Neck bending mode** is estimated with a simple two-degree-of-freedom model. Tap-test it on the built rig (build-and-test.md).
+7. **Storm behaviour above Re ≈ 200,000** (12–40 m/s for this tube): the "drag crisis" lowers drag and weakens vortex shedding for smooth cylinders, but turbulence, roughness and the end discs change that. The structural checks take no credit for it. The neck's second bending mode may fall in the 15–30 Hz range, where shedding at 20–40 m/s could reach it and the brake barely damps it. Tap-test the built rig.
+8. **Wall ovalling and disc gust models are simple estimates** (ring bending under the pressure distribution; flat-plate lift for a 10° gust).
+9. **Generator cogging and heat.** Measure cogging and drag before building; the 5 W winding limit is assumed.
+10. **Durability:** shell and skin under 3 × 10⁷ swing cycles a year plus UV and hail; belt life at the reversals; bushing wear.
+11. **Icing:** ice changes the shape and can cause galloping. Brake when icing is likely.
 
 ---
 
@@ -405,12 +458,14 @@ Annual energy rises slowly above a 4.5 m/s site mean because output is capped at
 
 | Item | Before | Now | Why |
 |---|---|---|---|
-| Wind range | 3–7 m/s generating, 25 m/s survival | 1.6–8 m/s generating, 25 m/s (B) or 42 m/s (C) survival | Brief extended to 2–40 m/s |
+| Wind range | 3–7 m/s generating, 25 m/s survival | 1.6–8 m/s generating (to ~11 m/s with the keep-generating option), 25 m/s (B) or 42 m/s (C) survival | Brief extended to 2–40 m/s |
+| B's neck | 30 × 28 mm carbon | 35 × 32 mm carbon | New neck bending-mode check: the thinner neck bends at 9.6 Hz and would cap the swing at 8 m/s |
+| Power to 40 m/s | — | `curve` command and page chart: as designed, kept generating, model potential, wind | Requested |
 | Configuration C | — | Added: all-weather, from a 40 m/s grid search | Survives 40 m/s unattended |
 | Shell wall | Outer glass skin only | Glass on both faces | The new wall-ovalling check limits a single-skin shell to ~15 m/s |
 | End discs | 3 mm foam with carbon strips | Built like the shell wall | The new gust-lift check |
 | Operating modes | Tracking only | Idle, tracking, power-capped, braked; kick-start | Defined for every wind speed |
 | Self-protection | "Drops out of lock-on above 1.2 × tuned speed" | Brake and stiff carriage protect it; brake is fail-safe | Low mass ratio widens the lock-on band |
-| B figures | 2.05 W at 4.5 m/s; 10.7 kWh/yr | 2.01 W; 9.1 kWh/yr | Heavier sandwich shell and discs; cap at 7 m/s, brake at 8 m/s |
+| B figures | 2.05 W at 4.5 m/s; 10.7 kWh/yr | 2.00 W; 9.1 kWh/yr (14.7 kWh/yr kept generating) | Heavier sandwich shell, discs and neck; cap at 7 m/s, brake at 8 m/s |
 | Neck tube in the grid search | Fixed | Sized automatically per design | Survival and fatigue checks |
 | Earlier corrections (still applied) | Three 4 mm rods; 8 mm axle; bare foam shell | Carbon tube neck; 10–16 mm axle; glass-skinned shell | Buckling, bushing loads, skin stress |

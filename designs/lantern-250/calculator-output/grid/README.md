@@ -6,7 +6,7 @@ There are two grids for each survival requirement:
 - **25 m/s** grids use configuration B's fixed hardware: hub built for 150 N·m, 12 mm axle with bushings 150 mm apart, 0.15 kg hub.
 - **40 m/s** grids use configuration C's: hub built for 350 N·m, 16 mm axle with bushings 200 mm apart, 0.30 kg hub.
 
-In every grid the end discs are built like the shell, and the neck tube is sized automatically: the lightest standard carbon tube that survives the requirement and the swing fatigue.
+In every grid the end discs are built like the shell, and the neck tube is sized automatically: the lightest standard carbon tube that survives the requirement, the swing fatigue and the neck bending-mode check.
 
 | File | Rows | Survival requirement | Grid |
 |---|---|---|---|
@@ -17,10 +17,10 @@ In every grid the end discs are built like the shell, and the neck tube is sized
 
 | Grid | Designs that pass | Best design | Electrical at 4.5 m/s | Yearly energy, 4.5 m/s site |
 |---|---|---|---|---|
-| Wide, 25 m/s | 5,743 | 240 mm, 800 mm neck, 2.0× discs, 3 mm sandwich, 10 teeth | 1.96 W | 9.0 kWh |
-| Fine, 25 m/s | 6,440 | 250 mm, 800 mm neck, 2.0× discs, 3 mm sandwich, 10 teeth | 2.05 W | 9.4 kWh |
-| Wide, 40 m/s | 1,767 | 240 mm, 700 mm neck, 2.0× discs, storm shell, 10 teeth | 1.81 W | 8.4 kWh |
-| Fine, 40 m/s | 1,597 | 250 mm, 650 mm neck, 2.0× discs, storm shell, 10 teeth | 1.87 W | 8.7 kWh |
+| Wide, 25 m/s | 5,745 | 240 mm, 800 mm neck (35 × 32), 2.0× discs, 3 mm sandwich, 10 teeth | 1.95 W | 9.0 kWh |
+| Fine, 25 m/s | 6,441 | 250 mm, 800 mm neck (35 × 32), 2.0× discs, 3 mm sandwich, 10 teeth | 2.04 W | 9.4 kWh |
+| Wide, 40 m/s | 1,767 | 240 mm, 700 mm neck (35 × 32), 2.0× discs, storm shell, 10 teeth | 1.81 W | 8.4 kWh |
+| Fine, 40 m/s | 1,597 | 250 mm, 650 mm neck (35 × 32), 2.0× discs, storm shell, 10 teeth | 1.87 W | 8.7 kWh |
 
 **Shell constructions:**
 
@@ -58,7 +58,7 @@ Values marked "4.5" are at a 4.5 m/s wind, locked on, at the model's optimum gen
 |---|---|
 | `rank` | Rank among passing designs by `p_elec_4p5_W`; blank if the design fails a limit |
 | `passes` | `yes` if every limit is met |
-| `failed_limits` | Which limits fail: `Reynolds` (Re > 120,000 at 7 m/s), `survival` (fails before the required storm wind, parked and braked), `operating loads` (neck fatigue or peak, skin, voltage or generator heat over the limit while swinging), `height`, `generator too weak` (cannot provide the optimum damping) |
+| `failed_limits` | Which limits fail: `Reynolds` (Re > 120,000 at 7 m/s), `survival` (fails before the required storm wind, parked and braked), `operating loads` (neck fatigue, peak or bending mode, skin, voltage or generator heat over the limit while swinging), `height`, `generator too weak` (cannot provide the optimum damping) |
 | `D_mm`, `neck_mm` | Tube diameter; hinge to tube bottom |
 | `disc_ratio`, `disc_dia_mm` | End-disc diameter ÷ tube diameter (1.0 = no discs); disc diameter |
 | `shell`, `shell_kg_m2` | Shell construction and its areal mass |
@@ -80,6 +80,8 @@ Values marked "4.5" are at a 4.5 m/s wind, locked on, at the model's optimum gen
 | `circuit_R_4p5_ohm`, `copper_eff_4p5`, `emf_peak_4p5_V`, `gen_peak_rpm_4p5` | Generator operating point |
 | `Re_at_Umax` | Reynolds number at 7 m/s |
 | `max_neck_fatigue_util` | Highest neck fatigue utilisation while swinging (1.0 = at the allowable) |
+
+Power curves to 40 m/s for any row: rebuild the design with `tools/lantern_calc.py curve` and the row's settings, for example `curve --D 0.25 --neck 0.8 --disc_ratio 2.0 --pulley_teeth 10 --shell xps3-sandwich`.
 | `storm_hinge_moment_Nm` | Drag moment at the hinge at the survival requirement |
 
 Failing designs still have their output computed, so you can see what each limit costs. The end-disc benefit comes from an assumed end-loss model, and every figure from the models in [../../physics.md](../../physics.md). Treat the ranking as a guide to what to test.

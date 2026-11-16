@@ -1,7 +1,7 @@
 # Lantern sweep: ranked by electrical power at 4.5 m/s, survival requirement 40 m/s
 
 28800 combinations: D 0.1-0.4 m, neck 0.0-0.8 m, disc ratio 1.0-2.4, shells xps2-single, xps3-single, xps3-sandwich, xps5-sandwich, xps5-storm, pulley teeth [10, 12, 16, 20, 24], neck tube sized automatically.  
-1767 pass all limits. Rejected (a design can fail several): Reynolds 14400, operating loads 10687, survival 26490
+1767 pass all limits. Rejected (a design can fail several): Reynolds 14400, operating loads 10681, survival 26490
 
 | Rank | Score (W) | D (mm) | Neck (mm) | Neck tube | Disc ratio | Shell | Teeth | Gear | Mass ratio | Mech eff 4.5 | Swing 4.5 (deg) | Cut-in | Survives to | Re at U_max |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -25,9 +25,9 @@
 
 | Variable | Value | Score | vs best |
 |---|---|---|---|
-| D (mm) | 100 | 0.51 | -72 % (fails survival) |
-| D (mm) | 140 | 0.90 | -51 % |
-| D (mm) | 180 | 1.28 | -30 % |
+| D (mm) | 100 | 0.50 | -73 % (fails survival) |
+| D (mm) | 140 | 0.89 | -51 % |
+| D (mm) | 180 | 1.27 | -30 % |
 | D (mm) | 220 | 1.63 | -10 % |
 | D (mm) | 260 | 1.99 | +10 % (fails Reynolds, survival) |
 | D (mm) | 300 | 2.33 | +29 % (fails Reynolds, survival) |
@@ -74,7 +74,8 @@ Constraint check: all pass
 - Cut-in (starts and produces >10 mW): 1.7 m/s with kick-start
 - Tracking: 2-7 m/s; power-capped at 7.01 W up to 8.0 m/s; braked above that
 - Survives (parked, braked) up to **40.7 m/s**, limited by the hub. Requirement: 40 m/s. Per part: neck 49, skin 55, wall 48, discs 45, hub 41
-- Worst while swinging: neck 19%, neck fatigue 38%, skin 16%, voltage 33%, generator heat 43%
+- Worst while swinging: neck 19%, neck fatigue 38%, skin 16%, voltage 33%, generator heat 43%, neck mode 70%
+- Neck-tube bending mode about 14.3 Hz (swing must stay below 9.5 Hz, reached at 11.5 m/s)
 
 ## Masses (kg)
 
@@ -142,15 +143,15 @@ Utilisation = load / allowable for each part (over 100% fails). Neck, skin and h
 | Wind (m/s) | Mode | Re | Flow | Tuned to (Hz) | Carriage (mm) | Swing (±°) | Elec (W) | Top accel (g) | EMF (V) | Neck | Neck fatigue | Skin | Wall | Discs | Hub | Worst |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | idle | 16,000 | tested | 5.30 | 140 | 0.0 | 0.00 | 0.0 | 0 | 0% | 0% | 0% | 0% | 0% | 0% | hub 0% |
-| 2 | tracking | 32,000 | tested | 1.52 | 41 | 4.5 | 0.09 | 1.5 | 10 | 1% | 2% | 1% | 0% | 0% | 0% | voltage 7% |
-| 2.5 | tracking | 40,000 | tested | 1.89 | 51 | 5.4 | 0.24 | 2.8 | 15 | 2% | 4% | 2% | 0% | 0% | 1% | voltage 10% |
-| 3 | tracking | 48,000 | tested | 2.27 | 61 | 5.8 | 0.48 | 4.3 | 19 | 3% | 6% | 3% | 0% | 0% | 1% | voltage 13% |
-| 4 | tracking | 64,000 | tested | 3.03 | 80 | 6.2 | 1.25 | 8.3 | 27 | 6% | 12% | 5% | 1% | 1% | 2% | voltage 18% |
-| 4.5 | tracking | 72,000 | tested | 3.41 | 90 | 6.3 | 1.81 | 10.6 | 31 | 8% | 15% | 6% | 1% | 1% | 2% | voltage 21% |
-| 5 | tracking | 80,000 | tested | 3.79 | 100 | 6.4 | 2.52 | 13.3 | 35 | 10% | 19% | 8% | 1% | 1% | 3% | voltage 23% |
-| 6 | tracking | 96,000 | tested | 4.55 | 120 | 6.5 | 4.41 | 19.4 | 43 | 14% | 28% | 12% | 2% | 2% | 4% | voltage 28% |
-| 7 | tracking | 112,000 | tested | 5.30 | 140 | 6.6 | 7.01 | 26.6 | 50 | 19% | 38% | 16% | 2% | 2% | 5% | neck fatigue 38% |
-| 7.5 | power-capped | 120,000 | tested | 5.30 | 140 | 4.8 | 7.01 | 22.5 | 39 | 17% | 32% | 14% | 2% | 3% | 6% | neck fatigue 32% |
+| 2 | tracking | 32,000 | tested | 1.52 | 41 | 4.5 | 0.09 | 1.5 | 10 | 1% | 2% | 1% | 0% | 0% | 0% | neck mode 17% |
+| 2.5 | tracking | 40,000 | tested | 1.89 | 51 | 5.4 | 0.24 | 2.8 | 15 | 2% | 4% | 2% | 0% | 0% | 1% | neck mode 22% |
+| 3 | tracking | 48,000 | tested | 2.27 | 61 | 5.8 | 0.48 | 4.3 | 19 | 3% | 6% | 3% | 0% | 0% | 1% | neck mode 26% |
+| 4 | tracking | 64,000 | tested | 3.03 | 80 | 6.2 | 1.25 | 8.3 | 27 | 6% | 12% | 5% | 1% | 1% | 2% | neck mode 35% |
+| 4.5 | tracking | 72,000 | tested | 3.41 | 90 | 6.3 | 1.81 | 10.6 | 31 | 8% | 15% | 6% | 1% | 1% | 2% | neck mode 39% |
+| 5 | tracking | 80,000 | tested | 3.79 | 100 | 6.4 | 2.52 | 13.3 | 35 | 10% | 19% | 8% | 1% | 1% | 3% | neck mode 44% |
+| 6 | tracking | 96,000 | tested | 4.55 | 120 | 6.5 | 4.41 | 19.4 | 43 | 14% | 28% | 12% | 2% | 2% | 4% | neck mode 52% |
+| 7 | tracking | 112,000 | tested | 5.30 | 140 | 6.6 | 7.01 | 26.6 | 50 | 19% | 38% | 16% | 2% | 2% | 5% | neck mode 61% |
+| 7.5 | power-capped | 120,000 | tested | 5.30 | 140 | 4.8 | 7.01 | 22.5 | 39 | 17% | 32% | 14% | 2% | 3% | 6% | neck mode 65% |
 | 8 | braked | 128,000 | beyond tested | 5.30 | 140 | 0.3 | 0.00 | 1.4 | 0 | 3% | 2% | 2% | 3% | 3% | 4% | generator heat 4% |
 | 9 | braked | 144,000 | beyond tested | 5.30 | 140 | 0.0 | 0.00 | 0.0 | 0 | 3% | 0% | 3% | 4% | 4% | 5% | hub 5% |
 | 10 | braked | 160,000 | beyond tested | 5.30 | 140 | 0.0 | 0.00 | 0.0 | 0 | 4% | 0% | 3% | 4% | 5% | 6% | hub 6% |
@@ -161,6 +162,40 @@ Utilisation = load / allowable for each part (over 100% fails). Neck, skin and h
 | 30 | braked | 480,000 | drag crisis | 5.30 | 140 | 0.0 | 0.00 | 0.0 | 0 | 38% | 0% | 29% | 40% | 44% | 54% | hub 54% |
 | 35 | braked | 560,000 | drag crisis | 5.30 | 140 | 0.0 | 0.00 | 0.0 | 0 | 51% | 0% | 40% | 54% | 59% | 74% | hub 74% |
 | 40 | braked | 640,000 | drag crisis | 5.30 | 140 | 0.0 | 0.00 | 0.0 | 0 | 67% | 0% | 52% | 71% | 78% | 97% | hub 97% |
+
+## Power from 1 to 40 m/s
+
+Model potential = output if the tube stayed tuned and locked on with nothing failing (not achievable). Within limits = the most it can deliver with every part within limits, retuning as far as the neck's bending mode allows. As designed = the default control.
+
+- Neck-tube bending mode about 14.3 Hz, so the swing must stay below 9.5 Hz: retuning is possible up to 11.5 m/s
+- As designed: generates 1.7-8.0 m/s, peak 7.01 W, braked above
+- Kept generating within every limit: generates 1.8-11.2 m/s, peak 24.96 W at 10.75 m/s; nothing above 12.5 m/s
+- Yearly energy, central case (kWh): 3.5 m/s site: as designed 5.9, within limits 7.1; 4.5 m/s site: as designed 8.4, within limits 14.0; 5.5 m/s site: as designed 9.2, within limits 20.4; 6.5 m/s site: as designed 8.8, within limits 24.4
+
+| Wind (m/s) | Re | Flow | Wind through tube (W) | Model potential (W) | Within limits (W) | Within limits: what governs | As designed (W) | As designed: mode |
+|---|---|---|---|---|---|---|---|---|
+| 1 | 16,000 | tested | 0.1 | 0.00 | 0.00 | idle | 0.00 | idle |
+| 2 | 32,000 | tested | 1.2 | 0.09 | 0.10 | unconstrained | 0.09 | tracking |
+| 3 | 48,000 | tested | 4.0 | 0.48 | 0.48 | unconstrained | 0.48 | tracking |
+| 4 | 64,000 | tested | 9.4 | 1.25 | 1.26 | unconstrained | 1.25 | tracking |
+| 4.5 | 72,000 | tested | 13.4 | 1.81 | 1.83 | unconstrained | 1.81 | tracking |
+| 5 | 80,000 | tested | 18.4 | 2.52 | 2.54 | unconstrained | 2.52 | tracking |
+| 6 | 96,000 | tested | 31.8 | 4.41 | 4.44 | unconstrained | 4.41 | tracking |
+| 7 | 112,000 | tested | 50.4 | 7.01 | 7.07 | unconstrained | 7.01 | tracking |
+| 8 | 128,000 | beyond tested | 75.3 | 10.41 | 10.52 | unconstrained | 0.00 | braked |
+| 9 | 144,000 | beyond tested | 107.2 | 14.71 | 14.88 | unconstrained | 0.00 | braked |
+| 10 | 160,000 | beyond tested | 147.0 | 19.98 | 20.24 | unconstrained | 0.00 | braked |
+| 11 | 176,000 | beyond tested | 195.7 | 26.30 | 1.80 | limited by generator heat | 0.00 | braked |
+| 12 | 192,000 | beyond tested | 254.0 | 33.73 | 0.00 | braked (generator heat) | 0.00 | braked |
+| 13 | 208,000 | drag crisis | 323.0 | 42.32 | 0.00 | braked (drag crisis) | 0.00 | braked |
+| 14 | 224,000 | drag crisis | 403.4 | 52.14 | 0.00 | braked (drag crisis) | 0.00 | braked |
+| 15 | 240,000 | drag crisis | 496.1 | 63.22 | 0.00 | braked (drag crisis) | 0.00 | braked |
+| 17.5 | 280,000 | drag crisis | 787.8 | 96.68 | 0.00 | braked (drag crisis) | 0.00 | braked |
+| 20 | 320,000 | drag crisis | 1,176.0 | 138.64 | 0.00 | braked (drag crisis) | 0.00 | braked |
+| 25 | 400,000 | drag crisis | 2,296.9 | 248.19 | 0.00 | braked (drag crisis) | 0.00 | braked |
+| 30 | 480,000 | drag crisis | 3,969.0 | 389.36 | 0.00 | braked (drag crisis) | 0.00 | braked |
+| 35 | 560,000 | drag crisis | 6,302.6 | 555.23 | 0.00 | braked (drag crisis) | 0.00 | braked |
+| 40 | 640,000 | drag crisis | 9,408.0 | 734.41 | 0.00 | braked (drag crisis) | 0.00 | braked |
 
 ## Structure at the survival requirement (40 m/s, parked and braked)
 

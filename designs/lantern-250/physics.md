@@ -19,12 +19,12 @@ This file explains every model used in [`tools/lantern_calc.py`](../../tools/lan
 | L | Tube length | 1.0 m |
 | r₁, r₂ | Distance from hinge to bottom and top of the tube | 0.8 m, 1.8 m |
 | St | Strouhal number | 0.2 |
-| I_s | Structural inertia about the hinge (incl. generator rotor through the belt) | 0.567 kg·m² |
+| I_s | Structural inertia about the hinge (incl. generator rotor through the belt) | 0.585 kg·m² |
 | I_a | Added (air) inertia | 0.107 kg·m² |
-| m* | Mass ratio = I_s ÷ displaced-air inertia | 5.3 |
+| m* | Mass ratio = I_s ÷ displaced-air inertia | 5.5 |
 | θ | Hinge swing amplitude | ~0.113 rad (6.5°) at 4.5 m/s |
 | ω | Swing angular frequency | 2π × 3.6 rad/s at 4.5 m/s |
-| ζ_e, ζ_p | Damping ratio from the generator; from everything else | 0.032, ~0.007 at 4.5 m/s |
+| ζ_e, ζ_p | Damping ratio from the generator; from everything else | 0.031, ~0.007 at 4.5 m/s |
 | G | Belt ratio | 26.2 |
 | K_e | Generator voltage constant (= torque constant in SI) | 0.38 V·s/rad |
 
@@ -56,7 +56,7 @@ Two opposing springs of rate k_s at distance r below the hinge give k = 2 k_s r�
 - For a uniform shell of areal mass σ, the shell part alone is m* ≈ 4σ/(ρD). A fatter tube of the same skin therefore has a lower mass ratio.
 
 **Low mass ratio (established, Govardhan & Williamson 2000):**
-- The lower-branch frequency ratio is f* = √((m* + C_a)/(m* − 0.54)). At m* = 5.3 that is 1.15, so the swing frequency can rise about 15% above f_n while staying locked on.
+- The lower-branch frequency ratio is f* = √((m* + C_a)/(m* − 0.54)). At m* = 5.5 that is 1.15, so the swing frequency can rise about 15% above f_n while staying locked on.
 - The synchronisation range widens as m* falls, and below about 0.54 it never ends.
 
 This is why the Lantern's tuning is forgiving, and also why it cannot rely on dropping out of lock-on for protection (section 9).
@@ -102,7 +102,7 @@ where Γ = (∫φ²)² / (L ∫φ⁴) is the share of parallel-motion output a h
 
 The model sits at the optimistic end, which is why the design quotes a **low case of half the model**.
 
-**The key consequence:** efficiency depends on the product m* × ζ_p. A slim mast in air (m* = 70–220) loses most of its output to a damping ratio of 0.002–0.008. The Lantern at m* ≈ 5 hardly notices it.
+**The key consequence:** efficiency depends on the product m* × ζ_p. A slim mast in air (m* = 70–220) loses most of its output to a damping ratio of 0.002–0.008. The Lantern at m* ≈ 5.5 hardly notices it.
 
 ## 7. Friction as damping (established method; values assumed)
 
@@ -161,9 +161,18 @@ The calculator's `operate()` follows these control rules at each wind speed U.
 
 **Lock-on reach (assumed ±20%).** At low mass ratio the synchronisation range is wider than in typical air tests (section 4). The lock-on reach therefore cannot be relied on to stop the swing. The brake does that.
 
-**Why cap and then brake (model results for B).**
-- Holding output at the 7 m/s value by raising generator damping increases winding current. Winding heat reaches the assumed 5 W limit near 8.4 m/s, so the brake speed is set at 8 m/s.
-- Running at full output instead, the 10 m/s point gives about 20 W but a 155 N·m cyclic neck moment, against 75 N·m at 7 m/s.
+**Why the default caps and then brakes (model results for B).** Holding output at the 7 m/s value by raising generator damping increases winding current. Winding heat reaches the assumed 5 W limit near 8.4 m/s, so the brake speed is set at 8 m/s.
+
+**Keep-generating control (`keep_generating = 1`).** The alternative control in `operate_limits()`:
+- **Retuning:** the tube may retune up to the lower of `U_tune_ext_max` (default 40 m/s) and the neck-mode limit (section 12a), with springs assumed rebuilt for the stiffness that needs.
+- **Lock-on tail:** beyond that it rides the lock-on tail to +20%.
+- **Generator load:** at each wind it searches generator damping from 0.2× to well above the optimum, up to the near-short-circuit maximum. It keeps the highest electrical output whose swinging loads are all at or under 100%: neck peak, fatigue and bending mode; skin; wall; discs; hub; voltage; generator heat. Running below the optimum damping cuts winding current, which is how it keeps the generator cool at higher winds.
+- **Where it stops:**
+  - no damping satisfies every limit (for B and C the generator's heat limit, at about 11–12 m/s),
+  - the Reynolds number passes `Re_harvest_max` (200,000, which is 12 m/s for a 250 mm tube),
+  - the wind is beyond the lock-on reach of the highest tuning.
+
+**Model potential.** The output from `solve()` at the optimum load with no limits at all, assuming the tube stays tuned and locked on at every wind speed. It is a reference line, not an achievable output. It flattens above ~30 m/s because even this generator's short-circuit damping can't absorb the swing efficiently.
 
 ## 10. Reynolds-number regimes (established boundary of evidence)
 
@@ -198,6 +207,7 @@ Each check gives a utilisation (load ÷ allowable). Over 100% fails. The drag co
 |---|---|---|---|
 | **Neck, peak** | √(M_drag² + M_swing²) × c / I, where M_drag = F (r₁ + L/2) is about the cross-wind axis and M_swing = I_above θ ω² is the swing's inertia about the hinge axis (perpendicular, so they add as vectors) | 400 MPa (carbon, ~40% of strength) | Established method; allowable assumed |
 | **Neck, fatigue** | M_swing × c / I | 200 MPa cyclic amplitude for ~10⁸ cycles | Assumed |
+| **Neck mode** | 1.5 × swing frequency ÷ neck-tube bending frequency (section 12a) | 1.0 | Approximate model |
 | **Skin** (tube bending at its base) | √(M_drag,base² + M_swing,base²) / (π R² t_skin), with M_drag,base = F L/2 and the swing moment from the shell and top disc above the base | 40 MPa (glass tissue on foam) | Established method; allowable assumed |
 | **Wall** (ovalling) | k q R² per unit length, k = 0.5. Ring bending from the cos 2θ part of the pressure round a cylinder (front +1 q, sides about −1 to −2 q); amplitude taken as 1.5 q, giving M = 1.5 q R²/3. Internal rings ignored (conservative) | Sandwich: σ_skin × t_inner × core thickness. Single skin: σ_foam × core²/2 with σ_foam = 0.25 MPa | Assumed |
 | **Discs** (gust lift) | C_L q w²/2 per unit length at the disc root, C_L = 1.1 (flat plate, ~10° gust inflow), w = disc overhang beyond the tube | Same wall formula as the disc's construction | Assumed |
@@ -207,14 +217,23 @@ Each check gives a utilisation (load ÷ allowable). Over 100% fails. The drag co
 
 Also reported: bushing load (drag moment ÷ bushing span, plus half the weight and swing inertia force); post base moment F (h_hub + r₁ + L/2) + head drag × h_hub; top-of-tube acceleration θ ω² r₂.
 
+**12a. Neck bending mode (approximate).** The swing is modelled as a rigid tube rocking on its hinge. That holds only while the neck and tube's own bending frequency stays well above the swing frequency.
+- **Model:** the neck is a cantilever from a rigid hinge, with the tube as a rigid body on its tip: mass plus added air, rotary inertia, centre L/2 above the tip. That gives a 2 × 2 eigenproblem for sideways movement and rotation at the neck tip. Holding the hinge rigid gives a lower bound on the real second mode.
+- **Check:** utilisation = 1.5 × swing frequency ÷ bending frequency, so the swing must stay below two-thirds of the bending frequency.
+- **Results:**
+  - B's 35 × 32 mm, 800 mm neck: 14.5 Hz, so retuning is capped at 12 m/s.
+  - C's 35 × 32 mm, 600 mm neck: 16 Hz, so 13 m/s.
+  - The 30 × 28 mm neck first specified for B: 9.6 Hz, only 8 m/s, which is why it was changed.
+- **Locked hinge:** with the hinge locked the same mode is reached by vortices at about 1.25 × its frequency (m/s), so a locked neck would resonate in moderate winds.
+
 **Survival wind.** Parked and braked, every check above scales with q (U²). So each part's survival wind is 10 m/s ÷ √(utilisation at 10 m/s). The design's survival wind is the lowest of the neck, skin, wall, disc and hub values.
 
-**Neck sizing in the grid search.** For each design the calculator picks the lightest of five standard carbon tubes (25×23 to 50×47 mm) whose neck survival wind meets the requirement and whose fatigue utilisation stays under 100%.
+**Neck sizing in the grid search.** For each design the calculator picks the lightest of five standard carbon tubes (25×23 to 50×47 mm) whose neck survival wind meets the requirement and whose fatigue and bending-mode utilisations stay under 100% up to the brake speed.
 
 ## 13. Annual energy (method established; inputs assumed)
 
 - Electrical power from the operating-mode envelope (section 9) is integrated over a Rayleigh wind distribution with the site mean at hub height.
-- Only swinging modes count; power is capped from 7 to 8 m/s and zero when braked.
+- Only swinging modes count. With the default control, power is capped from 7 to 8 m/s and zero when braked. With the keep-generating control, the integral runs to the highest wind it can harvest.
 - The result is multiplied by 0.5 for time lost to gusts, direction changes and retuning (assumed).
 - The low case halves it again.
 

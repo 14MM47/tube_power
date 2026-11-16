@@ -112,6 +112,23 @@ See [../designs/lantern-250/](../designs/lantern-250/).
 
   It gives **1.84 W** at 4.5 m/s, about 9% less than B, and survives to about 42 m/s.
 
+## 7. Electrical power to 40 m/s, and the neck's bending mode
+
+**Brief:** see electrical power for the best designs all the way to 40 m/s.
+
+**What changed:**
+- **A `curve` command and a chart on the grid page.** For any design they show four curves to 40 m/s:
+  - as designed,
+  - kept generating within every limit,
+  - the model's potential (if it stayed locked on and nothing failed),
+  - the wind passing the tube.
+- **A keep-generating control option.** It retunes as far as the neck allows, then picks the generator load that gives the most power with every part within limits.
+- **A neck bending-mode check.** The neck and tube must bend at least 1.5 × faster than the swing.
+  - The 30 × 28 mm neck first specified for B bends at ~9.6 Hz, which caps the swing at 8 m/s. B now has a 35 × 32 mm neck (~14.5 Hz, retuning possible to 12 m/s) at a cost of ~0.5% of output.
+  - The grid search's earlier winners used 25 × 23 mm necks, which fail this check. The grids were regenerated.
+
+**Result:** a VIV tube generates nothing above about 11 m/s, whatever the control. The generator's heat limit, the neck's bending mode and the drag crisis (Reynolds number above 200,000) all stop it there, even though the model's potential reaches hundreds of watts. Keeping it generating to ~11 m/s adds ~60% to yearly energy at a 4.5 m/s site, in untested flow.
+
 ## Progression in one table
 
 | Design | Mass ratio | Electrical at 4.5 m/s (central) |
@@ -121,5 +138,5 @@ See [../designs/lantern-250/](../designs/lantern-250/).
 | 40 mm carbon, capstan | ~69 | ~0.2 W |
 | 40 mm carbon, voice coil | ~69 | ~0.3–0.37 W |
 | Lantern 250-A (with all later corrections) | 4.7 | 1.57 W |
-| **Lantern 250-B** (survives 25 m/s) | **5.3** | **2.01 W** |
+| **Lantern 250-B** (survives 25 m/s) | **5.5** | **2.00 W** |
 | **Lantern 250-C** (survives 40 m/s) | **7.7** | **1.84 W** |

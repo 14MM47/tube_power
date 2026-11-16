@@ -1,0 +1,81 @@
+U,Re,wind_W,potential_W,within_limits_W,within_limits_mode,within_limits_note,within_limits_swing_deg,as_designed_W,as_designed_mode
+0.5,8333.3333,0.0191,0.0,0.0,idle,idle,0.0,0.0,idle
+1.0,16666.6667,0.1531,0.0,0.0,idle,idle,0.0,0.0,idle
+1.5,25000.0,0.5168,0.0317,0.0,idle,idle,0.0,0.0,idle
+2.0,33333.3333,1.225,0.1319,0.1384,tracking,unconstrained,6.2176,0.1319,tracking
+2.5,41666.6667,2.3926,0.3025,0.3091,tracking,unconstrained,6.7766,0.3025,tracking
+3.0,50000.0,4.1344,0.5605,0.5682,tracking,unconstrained,6.4874,0.5605,tracking
+3.5,58333.3333,6.5652,0.9209,0.9322,tracking,unconstrained,6.655,0.9209,tracking
+4.0,66666.6667,9.8,1.3978,1.4145,tracking,unconstrained,6.7619,1.3978,tracking
+4.5,75000.0,13.9535,2.0044,2.0288,tracking,unconstrained,6.8345,2.0044,tracking
+5.0,83333.3333,19.1406,2.753,2.7881,tracking,unconstrained,6.886,2.753,tracking
+5.5,91666.6667,25.4762,3.6551,3.7047,tracking,unconstrained,6.9239,3.6551,tracking
+6.0,100000.0,33.075,4.7211,4.79,tracking,unconstrained,6.9527,4.7211,tracking
+6.5,108333.3333,42.052,5.9608,6.0622,tracking,unconstrained,7.5526,5.9608,tracking
+7.0,116666.6667,52.5219,7.383,7.5314,tracking,unconstrained,7.5703,7.383,tracking
+7.5,125000.0,64.5996,8.9959,9.2061,tracking,unconstrained,7.5846,7.383,power-capped
+8.0,133333.3333,78.4,10.8063,11.0964,tracking,unconstrained,7.5963,0.0,braked
+8.5,141666.6667,94.0379,12.8207,13.2117,tracking,unconstrained,7.606,0.0,braked
+9.0,150000.0,111.6281,15.0445,15.5606,tracking,unconstrained,7.6141,0.0,braked
+9.5,158333.3333,131.2855,17.482,18.1512,tracking,unconstrained,7.6209,0.0,braked
+10.0,166666.6667,153.125,20.1371,20.504,tracking,unconstrained,8.2655,0.0,braked
+10.5,175000.0,177.2613,23.0126,23.5795,tracking,unconstrained,8.2706,0.0,braked
+11.0,183333.3333,203.8094,26.1103,0.0,braked,braked (generator heat),0.0,0.0,braked
+11.5,191666.6667,232.884,29.4314,0.0,braked,braked (generator heat),0.0,0.0,braked
+12.0,200000.0,264.6,32.9761,0.0,braked,braked (generator heat),0.0,0.0,braked
+12.5,208333.3333,299.0723,36.7437,0.0,braked,braked (drag crisis),0.0,0.0,braked
+13.0,216666.6667,336.4156,40.7327,0.0,braked,braked (drag crisis),0.0,0.0,braked
+13.5,225000.0,376.7449,44.9408,0.0,braked,braked (drag crisis),0.0,0.0,braked
+14.0,233333.3333,420.175,49.3648,0.0,braked,braked (drag crisis),0.0,0.0,braked
+14.5,241666.6667,466.8207,54.0005,0.0,braked,braked (drag crisis),0.0,0.0,braked
+15.0,250000.0,516.7969,58.843,0.0,braked,braked (drag crisis),0.0,0.0,braked
+15.5,258333.3333,570.2184,63.8864,0.0,braked,braked (drag crisis),0.0,0.0,braked
+16.0,266666.6667,627.2,69.1242,0.0,braked,braked (drag crisis),0.0,0.0,braked
+16.5,275000.0,687.8566,74.5487,0.0,braked,braked (drag crisis),0.0,0.0,braked
+17.0,283333.3333,752.3031,80.1515,0.0,braked,braked (drag crisis),0.0,0.0,braked
+17.5,291666.6667,820.6543,85.9234,0.0,braked,braked (drag crisis),0.0,0.0,braked
+18.0,300000.0,893.025,91.8542,0.0,braked,braked (drag crisis),0.0,0.0,braked
+18.5,308333.3333,969.5301,97.933,0.0,braked,braked (drag crisis),0.0,0.0,braked
+19.0,316666.6667,1050.2844,104.1479,0.0,braked,braked (drag crisis),0.0,0.0,braked
+19.5,325000.0,1135.4027,110.4861,0.0,braked,braked (drag crisis),0.0,0.0,braked
+20.0,333333.3333,1225.0,116.9341,0.0,braked,braked (drag crisis),0.0,0.0,braked
+20.5,341666.6667,1319.191,123.4774,0.0,braked,braked (drag crisis),0.0,0.0,braked
+21.0,350000.0,1418.0906,130.1008,0.0,braked,braked (drag crisis),0.0,0.0,braked
+21.5,358333.3333,1521.8137,136.788,0.0,braked,braked (drag crisis),0.0,0.0,braked
+22.0,366666.6667,1630.475,143.522,0.0,braked,braked (drag crisis),0.0,0.0,braked
+22.5,375000.0,1744.1895,150.285,0.0,braked,braked (drag crisis),0.0,0.0,braked
+23.0,383333.3333,1863.0719,157.0581,0.0,braked,braked (drag crisis),0.0,0.0,braked
+23.5,391666.6667,1987.2371,163.8217,0.0,braked,braked (drag crisis),0.0,0.0,braked
+24.0,400000.0,2116.8,170.5554,0.0,braked,braked (drag crisis),0.0,0.0,braked
+24.5,408333.3333,2251.8754,177.2379,0.0,braked,braked (drag crisis),0.0,0.0,braked
+25.0,416666.6667,2392.5781,183.8468,0.0,braked,braked (drag crisis),0.0,0.0,braked
+25.5,425000.0,2539.023,190.3591,0.0,braked,braked (drag crisis),0.0,0.0,braked
+26.0,433333.3333,2691.325,196.7509,0.0,braked,braked (drag crisis),0.0,0.0,braked
+26.5,441666.6667,2849.5988,202.9974,0.0,braked,braked (drag crisis),0.0,0.0,braked
+27.0,450000.0,3013.9594,209.0729,0.0,braked,braked (drag crisis),0.0,0.0,braked
+27.5,458333.3333,3184.5215,214.9509,0.0,braked,braked (drag crisis),0.0,0.0,braked
+28.0,466666.6667,3361.4,220.6041,0.0,braked,braked (drag crisis),0.0,0.0,braked
+28.5,475000.0,3544.7098,226.0041,0.0,braked,braked (drag crisis),0.0,0.0,braked
+29.0,483333.3333,3734.5656,231.1218,0.0,braked,braked (drag crisis),0.0,0.0,braked
+29.5,491666.6667,3931.0824,235.9274,0.0,braked,braked (drag crisis),0.0,0.0,braked
+30.0,500000.0,4134.375,240.3898,0.0,braked,braked (drag crisis),0.0,0.0,braked
+30.5,508333.3333,4344.5582,244.4775,0.0,braked,braked (drag crisis),0.0,0.0,braked
+31.0,516666.6667,4561.7469,248.1579,0.0,braked,braked (drag crisis),0.0,0.0,braked
+31.5,525000.0,4786.0559,251.3975,0.0,braked,braked (drag crisis),0.0,0.0,braked
+32.0,533333.3333,5017.6,254.1621,0.0,braked,braked (drag crisis),0.0,0.0,braked
+32.5,541666.6667,5256.4941,256.4165,0.0,braked,braked (drag crisis),0.0,0.0,braked
+33.0,550000.0,5502.8531,258.1247,0.0,braked,braked (drag crisis),0.0,0.0,braked
+33.5,558333.3333,5756.7918,259.2498,0.0,braked,braked (drag crisis),0.0,0.0,braked
+34.0,566666.6667,6018.425,259.7541,0.0,braked,braked (drag crisis),0.0,0.0,braked
+34.5,575000.0,6287.8676,259.5989,0.0,braked,braked (drag crisis),0.0,0.0,braked
+35.0,583333.3333,6565.2344,258.7449,0.0,braked,braked (drag crisis),0.0,0.0,braked
+35.5,591666.6667,6850.6402,257.1516,0.0,braked,braked (drag crisis),0.0,0.0,braked
+36.0,600000.0,7144.2,254.7779,0.0,braked,braked (drag crisis),0.0,0.0,braked
+36.5,608333.3333,7446.0285,251.5818,0.0,braked,braked (drag crisis),0.0,0.0,braked
+37.0,616666.6667,7756.2406,247.5203,0.0,braked,braked (drag crisis),0.0,0.0,braked
+37.5,625000.0,8074.9512,242.5496,0.0,braked,braked (drag crisis),0.0,0.0,braked
+38.0,633333.3333,8402.275,236.6251,0.0,braked,braked (drag crisis),0.0,0.0,braked
+38.5,641666.6667,8738.327,229.7013,0.0,braked,braked (drag crisis),0.0,0.0,braked
+39.0,650000.0,9083.2219,221.7318,0.0,braked,braked (drag crisis),0.0,0.0,braked
+39.5,658333.3333,9437.0746,212.6695,0.0,braked,braked (drag crisis),0.0,0.0,braked
+40.0,666666.6667,9800.0,202.4661,0.0,braked,braked (drag crisis),0.0,0.0,braked

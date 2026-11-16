@@ -7,7 +7,7 @@ The current design is **Lantern 250**:
 - on a carbon neck and a single-axis hinge that a tail vane keeps aligned with the wind,
 - swinging across the wind and driving one small generator through a toothed belt.
 
-It generates from about 1.6 m/s to 8 m/s, brakes itself above that, and in configuration C survives 40 m/s.
+It generates from about 1.6 m/s to 8 m/s as designed (to about 11 m/s with the keep-generating option), brakes itself above that, and in configuration C survives 40 m/s.
 
 The swing stays in step with the wind by sliding a spring carriage along a lever below the hinge, about 20 mm per 1 m/s of wind speed.
 
@@ -16,14 +16,15 @@ The swing stays in step with the wind by sliding a spring carriage along a lever
 | | **B: best output** | **C: all-weather** |
 |---|---|---|
 | Tube | Ø250 × 1,000 mm, 3 mm foam, glass both faces, Ø500 mm end discs | Ø250 × 1,000 mm, 5 mm foam, glass both faces (thicker near the base), Ø500 mm end discs |
-| Neck and hub | 800 mm carbon neck; hub built for 150 N·m | 600 mm carbon neck; hub built for 350 N·m |
-| Swinging mass / mass ratio | 0.55 kg / 5.3 | 0.86 kg / 7.7 |
+| Neck and hub | 800 mm, 35 × 32 mm carbon neck; hub built for 150 N·m | 600 mm, 35 × 32 mm carbon neck; hub built for 350 N·m |
+| Swinging mass / mass ratio | 0.63 kg / 5.5 | 0.86 kg / 7.7 |
 | Drive | GT2 belt, 26:1, to a 5208-size brushless gimbal motor | same |
 | Generates | ~1.6–8 m/s (tracking to 7, capped to 8, braked above) | same |
 | **Electrical power at 4.5 m/s** | **~2.0 W** (low case ~1.0 W) | **~1.8 W** (low case ~0.9 W) |
 | Electrical power at 7 m/s (rated) | ~7.4 W | ~7.0 W |
 | Survives, parked and braked | 25 m/s | 42 m/s |
-| Energy at a 4.5 m/s-mean site | ~9 kWh/yr (low case ~5) | ~8.5 kWh/yr (low case ~4) |
+| Kept generating within limits | to ~10.8 m/s, peak ~24 W | to ~11 m/s, peak ~26 W |
+| Energy at a 4.5 m/s-mean site | ~9 kWh/yr as designed; ~15 kWh/yr kept generating | ~8.5 kWh/yr as designed; ~14 kWh/yr kept generating |
 
 For scale, a 100 W solar panel gives roughly 90–150 kWh a year. This is a physics and mechanism project. The aim of a first build is to measure a power curve, which nobody has published for a tube like this.
 
@@ -34,7 +35,7 @@ For scale, a 100 W solar panel gives roughly 90–150 kWh a year. This is a phys
 | [designs/lantern-250/README.md](designs/lantern-250/README.md) | Full design specification: reasoning, configurations A, B and C, operating modes from 2 to 40 m/s, parts, structure, tuning, drive, electronics, performance, optimisation, risks |
 | [designs/lantern-250/physics.md](designs/lantern-250/physics.md) | Every model and equation used, with confidence levels and references |
 | [designs/lantern-250/build-and-test.md](designs/lantern-250/build-and-test.md) | Parts list, build order, bench and outdoor tests, safety |
-| [designs/lantern-250/calculator-output/](designs/lantern-250/calculator-output/) | Reports and 1–40 m/s wind envelopes for A, B and C; optimisation sweeps |
+| [designs/lantern-250/calculator-output/](designs/lantern-250/calculator-output/) | Reports, 1–40 m/s wind envelopes and 1–40 m/s power curves for A, B and C; optimisation sweeps |
 | [designs/lantern-250/calculator-output/grid/](designs/lantern-250/calculator-output/grid/) | Full optimisation grids as CSV: 102,480 design points for 25 m/s and 40 m/s survival, passing and failing, 41 columns each |
 | [docs/design-history.md](docs/design-history.md) | Earlier designs (tuned mast with mechanical rectifier, 40 mm PVC, 40 mm carbon, contactless generators) and what each taught |
 | [research/](research/) | Research report and notes on bladeless turbines, DIY builds, patents and academic work |
@@ -54,10 +55,22 @@ Mode, power and every structural and electrical limit at each wind speed from 1 
 python3 tools/lantern_calc.py envelope --config C
 ```
 
-The same in 0.5 m/s steps, saved as a CSV power curve:
+Electrical power at every wind speed from 1 to 40 m/s: as designed, kept generating within every limit, the model's potential, and the wind passing the tube:
 
 ```bash
-python3 tools/lantern_calc.py envelope --config C --from 0.5 --step 0.5 --to 40 --csv curve.csv
+python3 tools/lantern_calc.py curve --config C
+```
+
+The same in 0.5 m/s steps, saved as CSV:
+
+```bash
+python3 tools/lantern_calc.py curve --config C --from 0.5 --step 0.5 --to 40 --csv curve.csv
+```
+
+Run any command with the keep-generating control instead of the default cap-and-brake:
+
+```bash
+python3 tools/lantern_calc.py envelope --config C --keep_generating 1
 ```
 
 Override any parameter, for example a 200 mm tube with your measured motor:

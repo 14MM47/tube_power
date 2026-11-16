@@ -11,10 +11,10 @@ No prices are given; check current suppliers.
 | Tube | Extruded polystyrene sheet (model-aircraft foam, e.g. Depron-type): 3 mm for A/B, 5 mm for C; ~1.5 m² | Shell and discs |
 | | ~25 g/m² glass tissue (surfacing veil) and laminating epoxy, **on both faces** | Skins carry storm bending and resist ovalling. For C, build the outer skin up to ~3 layers over the bottom third of the tube |
 | | Foam for four internal rings (C: carbon-capped rings) | Keep the tube round |
-| Neck | Roll-wrapped carbon tube, mostly lengthwise fibres: 30 × 28 mm, 0.8 m (B); 35 × 32 mm, 0.6 m (C); 25 × 23 mm, 0.4 m (A) | Bonded into hub and spider sockets |
+| Neck | Roll-wrapped carbon tube, mostly lengthwise fibres: 35 × 32 mm, 0.8 m (B); 35 × 32 mm, 0.6 m (C); 25 × 23 mm, 0.4 m (A) | Bonded into hub and spider sockets |
 | Hub and hinge | Stainless axle and two flanged polymer plain bushings: 12 mm, 150 mm apart (B); 16 mm, 200 mm apart (C) | Hub built for 150 N·m (B) or 350 N·m (C) |
 | | Rubber end-stop blocks | ±14° |
-| Tuning | Two compression springs, 17.7 N/mm (B), 17.8 N/mm (C), 8.0 N/mm (A), ~35 mm usable travel | Fatigue-rated (die springs are a good choice) |
+| Tuning | Two compression springs, 18.2 N/mm (B), 17.8 N/mm (C), 8.0 N/mm (A), ~35 mm usable travel | Fatigue-rated (die springs are a good choice) |
 | | T8 lead screw (2 mm per turn), nut, linear guide, NEMA-17 stepper | Carriage 60–140 mm below the hinge |
 | Drive | GT2 belt (6 mm or 9 mm wide), clamped round a 100 mm-radius arc on the hub | |
 | | 12-tooth and 16-tooth GT2 pulleys to suit the motor shaft | |
@@ -63,7 +63,7 @@ No prices are given; check current suppliers.
 | Damping with load | Pluck with a fixed resistor (~110 Ω) on the generator; measure the decay | Generator damping ratio near 0.03 |
 | Kick-start | In still air, command a short drive burst at the tuned frequency | Tube reaches a few degrees of swing within a few cycles |
 | Brake | Pluck, then apply the brake; also cut power with the tube swinging | Swing stops within a few cycles; brake engages with power removed |
-| Neck modes | Lock the tube by hand, tap the neck and record the ring-down (phone accelerometer) | Note any mode between 10 and 35 Hz; vortices reach it at roughly 1.25 × frequency m/s |
+| Neck modes | Lock the tube by hand, tap the neck and record the ring-down (phone accelerometer) | First bending mode at or above the calculator's estimate (14.5 Hz for B, 16 Hz for C). The swing must stay below two-thirds of it; vortices reach it at roughly 1.25 × frequency m/s |
 
 Update `tools/lantern_calc.py` parameters with the measured values and re-run before outdoor tests.
 
@@ -81,9 +81,10 @@ Update `tools/lantern_calc.py` parameters with the measured values and re-run be
    - Ø400 vs Ø500 mm discs, and no discs
    - 12- vs 16-tooth pulley
    - Roughness strips on and off. Michigan's passive turbulence control used thin strips at about ±20–60° from the front stagnation point. Here the head turns with the wind, so the strips stay correctly placed.
-5. **Mode transitions.** Log the cap and brake engaging in rising wind (7–9 m/s), and check winding temperature in the capped band against the assumed 5 W limit.
-6. **Storms.** Log tube motion and generator voltage while braked in strong wind. Compare drag, bushing and post loads with the calculator envelope.
-7. **Endurance.** Inspect the skin, belt, bushings and springs monthly, and after every storm.
+5. **Keep-generating trial.** Once the power curve to 7 m/s is established, enable the keep-generating control and log output, swing, winding temperature and neck strain from 7 to 11 m/s. This is the least certain part of the model.
+6. **Mode transitions.** Log the cap and brake engaging in rising wind (7–9 m/s), and check winding temperature in the capped band against the assumed 5 W limit.
+7. **Storms.** Log tube motion and generator voltage while braked in strong wind. Compare drag, bushing and post loads with the calculator envelope.
+8. **Endurance.** Inspect the skin, belt, bushings and springs monthly, and after every storm.
 
 A useful trick for repeatable wind: a roof-rack rig driven at a steady speed on a private road. Mind the safety.
 
@@ -99,6 +100,10 @@ python3 tools/lantern_calc.py report --config C     # configuration C (all-weath
 
 ```bash
 python3 tools/lantern_calc.py envelope --config C   # mode, power and every limit at 1-40 m/s
+```
+
+```bash
+python3 tools/lantern_calc.py curve --config C      # electrical power 1-40 m/s, both controls
 ```
 
 ```bash
