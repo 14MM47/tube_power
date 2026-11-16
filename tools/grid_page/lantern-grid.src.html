@@ -1,0 +1,867 @@
+<title>Lantern Design Grid</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: instrument panel. Filter rail on top, heat map beside a best-design readout, full design table below. */
+:root {
+  --bg: #f2f5f7;
+  --surface: #ffffff;
+  --surface-2: #e9eef1;
+  --ink: #121a21;
+  --ink-2: #4a5764;
+  --muted: #66737f;
+  --line: #d5dde3;
+  --accent: #b5620a;
+  --accent-ink: #8f4b03;
+  --on-accent: #ffffff;
+  --good-ink: #006300;
+  --crit-ink: #b02e2e;
+  --hatch: #9aa6b0;
+  --focus: #2a78d6;
+  --h1: #cde2fb; --h2: #9ec5f4; --h3: #6da7ec; --h4: #3987e5; --h5: #256abf; --h6: #184f95; --h7: #0d366b;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --wind: #8a96a1; --band1: #eef2f5; --band2: #e3e8ec; --grid: #e2e8ed;
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1216; --surface: #141b21; --surface-2: #1b252c; --ink: #e5ecf1; --ink-2: #b2bfc9; --muted: #8e9ba6;
+    --line: #28333b; --accent: #f0a43c; --accent-ink: #f5b862; --on-accent: #141b21; --good-ink: #5fcf5f; --crit-ink: #f08a8a;
+    --hatch: #5d6a75; --focus: #6da7ec;
+    --h1: #12355f; --h2: #184f95; --h3: #256abf; --h4: #3987e5; --h5: #6da7ec; --h6: #9ec5f4; --h7: #cde2fb;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --wind: #74818c; --band1: #172028; --band2: #1d2830; --grid: #26313a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1216; --surface: #141b21; --surface-2: #1b252c; --ink: #e5ecf1; --ink-2: #b2bfc9; --muted: #8e9ba6;
+  --line: #28333b; --accent: #f0a43c; --accent-ink: #f5b862; --on-accent: #141b21; --good-ink: #5fcf5f; --crit-ink: #f08a8a;
+  --hatch: #5d6a75; --focus: #6da7ec;
+  --h1: #12355f; --h2: #184f95; --h3: #256abf; --h4: #3987e5; --h5: #6da7ec; --h6: #9ec5f4; --h7: #cde2fb;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --wind: #74818c; --band1: #172028; --band2: #1d2830; --grid: #26313a;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.5 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1240px; margin: 0 auto; }
+header.top { padding-block: 28px 4px; }
+.eyebrow { font: 600 12px/1.2 var(--font-body); letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 8px; }
+h1 { font: 600 clamp(28px, 4vw, 40px)/1.1 var(--font-display); letter-spacing: -0.01em; margin: 0 0 10px; text-wrap: balance; }
+.lede { max-width: 72ch; color: var(--ink-2); margin: 0; }
+main { display: grid; gap: 20px; padding-block: 16px 40px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; min-width: 0; }
+h2 { font: 600 18px/1.3 var(--font-display); margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 13px; margin: 4px 0 12px; }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: flex-start; }
+.group { display: grid; gap: 6px; min-width: 0; }
+.lbl { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { font: 500 13px var(--font-body); color: var(--ink-2); background: var(--surface); border: 0; padding: 7px 12px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+select { font: 14px var(--font-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+.range { display: flex; gap: 6px; align-items: center; color: var(--muted); font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--font-body); font-variant-numeric: tabular-nums; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--surface-2); border-color: var(--ink-2); color: var(--ink); }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink); cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.textbtn { justify-self: start; background: none; border: 0; padding: 0; font: 500 14px var(--font-body); color: var(--accent-ink); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Overview */
+.overview { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .overview { grid-template-columns: minmax(0, 1fr); } }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 12px; color: var(--ink-2); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+.legend .ramp { display: inline-flex; align-items: center; gap: 6px; }
+.legend .bar { width: 120px; height: 10px; border-radius: 3px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; flex: none; }
+.sw.hatch { background: repeating-linear-gradient(135deg, var(--surface-2) 0 3px, var(--hatch) 3px 4px); border: 1px solid var(--line); }
+.sw.best { border: 2.5px solid var(--accent); }
+.sw.sel { border: 2px solid var(--ink); }
+.legitem { display: inline-flex; align-items: center; gap: 6px; }
+#heat { width: 100%; min-height: 200px; }
+#heat svg { display: block; width: 100%; height: auto; }
+#heat .tick { fill: var(--ink-2); font: 11px var(--font-body); font-variant-numeric: tabular-nums; }
+#heat .axis { fill: var(--ink-2); font: 500 12px var(--font-body); }
+#heat .cell { cursor: pointer; }
+#heat .cell:focus { outline: none; }
+#heat .cell:focus-visible .ring { stroke: var(--focus); stroke-width: 2.5; }
+.empty { color: var(--muted); font-size: 14px; padding: 40px 0; text-align: center; }
+
+.best .eyebrow { margin-bottom: 4px; }
+.best .big { font: 600 44px/1 var(--font-display); font-variant-numeric: tabular-nums; margin: 6px 0 2px; }
+.best .big small { font: 500 16px var(--font-body); color: var(--ink-2); margin-left: 4px; }
+.best .what { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+.best .settings { font-size: 14px; margin: 0 0 4px; }
+dl.kv { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; margin: 12px 0; font-size: 14px; }
+dl.kv dt { color: var(--ink-2); }
+dl.kv dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+.compare { border-top: 1px solid var(--line); padding-top: 10px; font-size: 13px; color: var(--ink-2); display: grid; gap: 8px; }
+
+/* Table */
+.tablehead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: flex-end; margin-bottom: 10px; }
+.counts { color: var(--ink-2); font-size: 14px; font-variant-numeric: tabular-nums; }
+.cellchip { display: inline-flex; gap: 8px; align-items: center; background: var(--surface-2); border-radius: 6px; padding: 3px 8px; font-size: 13px; margin-left: 6px; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; max-height: 640px; overflow-y: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); }
+th { position: sticky; top: 0; z-index: 1; background: var(--surface-2); font-weight: 600; color: var(--ink); vertical-align: bottom; }
+th button { all: unset; cursor: pointer; display: block; text-align: inherit; width: 100%; }
+th button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+th .u { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+th[aria-sort] .arrow::after { content: " ↓"; color: var(--accent-ink); }
+th[aria-sort="ascending"] .arrow::after { content: " ↑"; }
+th.l, td.l { text-align: left; }
+tbody tr:hover { background: var(--surface-2); }
+.ok { color: var(--good-ink); font-weight: 500; }
+.bad { color: var(--crit-ink); font-weight: 500; }
+.pill { display: inline-block; font-size: 11px; font-weight: 600; line-height: 1.4; padding: 0 6px; border-radius: 4px; background: var(--accent); color: var(--on-accent); margin-left: 6px; }
+.more { margin-top: 10px; display: flex; gap: 12px; align-items: center; color: var(--muted); font-size: 13px; }
+.btn { font: 500 14px var(--font-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.btn:hover { background: var(--surface-2); }
+
+/* Power curves */
+.curvehead { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 20px; align-items: flex-end; }
+.curvectl { display: flex; flex-wrap: wrap; gap: 10px 14px; min-width: 0; }
+.curvectl select { max-width: 100%; }
+@media (max-width: 560px) { .curvectl, .curvectl .group { flex: 1 1 100%; } .curvectl select { width: 100%; } }
+.curvegrid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; margin-top: 12px; }
+@media (max-width: 980px) { .curvegrid { grid-template-columns: minmax(0, 1fr); } }
+#curve { width: 100%; min-height: 280px; }
+#curve svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+#curve .tick { fill: var(--ink-2); font: 11px var(--font-body); font-variant-numeric: tabular-nums; }
+#curve .axis { fill: var(--ink-2); font: 500 12px var(--font-body); }
+#curve .bandlbl { fill: var(--muted); font: 600 10.5px var(--font-body); letter-spacing: .04em; text-transform: uppercase; }
+.keyrow { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); margin: 8px 0 4px; }
+.key { display: inline-flex; align-items: center; gap: 6px; }
+.key svg { flex: none; }
+.cursum { font-size: 14px; color: var(--ink); display: grid; gap: 6px; margin: 0 0 10px; }
+.cursum b { font-variant-numeric: tabular-nums; }
+.ctable { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+.ctable table { font-size: 12.5px; }
+.ctable td, .ctable th { padding: 5px 8px; }
+.ctable th { position: static; }
+.dim { color: var(--muted); }
+
+footer { font-size: 13px; color: var(--ink-2); display: grid; gap: 8px; max-width: 95ch; }
+footer p { margin: 0; }
+footer code { font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+footer a, .best a { color: var(--accent-ink); }
+#tip { position: fixed; z-index: 30; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12px; line-height: 1.45; padding: 8px 10px; border-radius: 6px; max-width: 300px; box-shadow: 0 6px 18px rgba(0, 0, 0, .22); font-variant-numeric: tabular-nums; }
+#tip b { font-weight: 600; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">Lantern 250 · bladeless wind generator</p>
+    <h1>Lantern design grid</h1>
+    <p class="lede">Electrical power from 1 to 40 m/s for the configurations, the two galloping versions and the best designs, then every design the optimiser evaluated: tube diameter, neck length, end discs, shell construction and pulley, for two storm requirements (survive 25 m/s or 40 m/s, parked and braked). All figures are model estimates. None has been measured.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="panel" aria-labelledby="curve-title">
+    <div class="curvehead">
+      <div>
+        <h2 id="curve-title">Electrical power from 1 to 40 m/s</h2>
+        <p class="sub" style="margin-bottom:0">For the vortex-shedding configurations, the two galloping versions (330-G, rated 20 W; 330-GH, most power from 15 to 40 m/s) and the best design in each grid. Pick a second design to overlay its output. Logarithmic scale: each gridline is ten times the one below.</p>
+      </div>
+      <div class="curvectl">
+        <div class="group">
+          <label class="lbl" for="curve-design">Design</label>
+          <select id="curve-design"></select>
+        </div>
+        <div class="group">
+          <label class="lbl" for="curve-cmp">Compare with</label>
+          <select id="curve-cmp"></select>
+        </div>
+      </div>
+    </div>
+    <div class="keyrow" id="curve-key"></div>
+    <div class="curvegrid">
+      <div id="curve"></div>
+      <div>
+        <div class="cursum" id="curve-sum"></div>
+        <div class="ctable"><table id="curve-table"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel controls" aria-label="Filters">
+    <div class="group">
+      <span class="lbl" id="lbl-grid">Grid and storm requirement</span>
+      <div class="seg" role="group" aria-labelledby="lbl-grid">
+        <button type="button" data-grid="fine-25">Fine · survive 25 m/s</button>
+        <button type="button" data-grid="fine-40">Fine · survive 40 m/s</button>
+        <button type="button" data-grid="wide-25">Wide · 25 m/s</button>
+        <button type="button" data-grid="wide-40">Wide · 40 m/s</button>
+      </div>
+    </div>
+    <div class="group">
+      <label class="lbl" for="measure">Rank by</label>
+      <select id="measure">
+        <option value="p">Electrical power at 4.5 m/s</option>
+        <option value="low">Low-case power at 4.5 m/s</option>
+        <option value="a">Energy per year, 4.5 m/s site</option>
+        <option value="e">Mechanical capture efficiency</option>
+        <option value="s">Highest survivable wind</option>
+      </select>
+    </div>
+    <div class="group">
+      <span class="lbl">Tube diameter (mm)</span>
+      <div class="range"><select id="d-min" aria-label="Smallest diameter"></select> to <select id="d-max" aria-label="Largest diameter"></select></div>
+    </div>
+    <div class="group">
+      <span class="lbl">Neck length (mm)</span>
+      <div class="range"><select id="n-min" aria-label="Shortest neck"></select> to <select id="n-max" aria-label="Longest neck"></select></div>
+    </div>
+    <div class="group">
+      <span class="lbl" id="lbl-disc">End discs (× tube diameter)</span>
+      <div class="chips" id="discs" role="group" aria-labelledby="lbl-disc"></div>
+    </div>
+    <div class="group">
+      <span class="lbl" id="lbl-shell">Shell (foam core · glass skins)</span>
+      <div class="chips" id="shells" role="group" aria-labelledby="lbl-shell"></div>
+    </div>
+    <div class="group">
+      <span class="lbl" id="lbl-teeth">Generator pulley</span>
+      <div class="chips" id="teeth" role="group" aria-labelledby="lbl-teeth"></div>
+    </div>
+    <div class="group">
+      <span class="lbl">Limits</span>
+      <label class="check"><input type="checkbox" id="include-fail"> Include designs that fail a limit</label>
+      <button type="button" class="textbtn" id="reset">Reset filters</button>
+    </div>
+  </section>
+
+  <section class="overview">
+    <div class="panel heat">
+      <h2 id="heat-title">Best power for each diameter and neck length</h2>
+      <p class="sub" id="heat-sub"></p>
+      <div class="legend" id="legend"></div>
+      <div id="heat"></div>
+    </div>
+    <aside class="panel best" id="best" aria-live="polite"></aside>
+  </section>
+
+  <section class="panel">
+    <div class="tablehead">
+      <div>
+        <h2>Designs</h2>
+        <div class="counts" id="counts"></div>
+      </div>
+      <label class="check"><input type="checkbox" id="all-cols"> Show all columns</label>
+    </div>
+    <div class="tablewrap"><table id="table"><thead></thead><tbody></tbody></table></div>
+    <div class="more"><button type="button" class="btn" id="more">Show 100 more</button><span id="more-note"></span></div>
+  </section>
+
+  <footer>
+    <p><b>Source.</b> The full optimisation grids in the <a href="https://github.com/14MM47/tube_power/tree/main/designs/lantern-250/calculator-output/grid" target="_blank" rel="noopener">tube_power repository</a> (<code>designs/lantern-250/calculator-output/grid/</code>), produced by <code>tools/lantern_calc.py sweep --csv</code>. For one design at every wind speed from 1 to 40 m/s, run <code>tools/lantern_calc.py envelope</code>.</p>
+    <p><b>Fixed settings.</b> 1 m tube; 5208 gimbal generator on a 100 mm belt arc; tuned 2–7 m/s, power capped from 7 m/s, braked from 8 m/s. The 25 m/s grids use configuration B's hub (built for 150 N·m, 12 mm axle, bushings 150 mm apart); the 40 m/s grids use configuration C's (350 N·m, 16 mm axle, 200 mm apart). End discs are built like the shell. The neck tube is the lightest standard carbon tube that passes.</p>
+    <p><b>A design passes</b> when its Reynolds number at 7 m/s is at most 120,000 (the tested range of the evidence); it survives the storm requirement parked and braked (neck, skin, shell-wall ovalling, end-disc gust lift, hub); its swinging loads stay within limits up to the brake speed (neck fatigue and peak stress, skin, voltage, generator heat); and the generator can supply the best damping.</p>
+    <p><b>Galloping versions.</b> Lantern 330-G is a 330 mm square prism that gallops instead of shedding vortices: it generates from about 2.5 m/s, holds its 20 W rating by turning the prism a few degrees on its own axis from 15.5 to 40 m/s, and turns 45° to stop. Lantern 330-GH is built for the most power from 15 to 40 m/s: an e-bike hub motor on a heavy belt, a ±25° swing and heavier springs, no power cap and no pitch regulation (face-on, or feathered above 40 m/s); it averages about 150 W over that range but only starts at about 6 m/s. Its curve comes from <code>tools/galloping_calc.py curve</code>, a quasi-steady model with smooth-flow coefficients for a square; gusty air may reduce it substantially. Its yearly energy assumes 80% of the model output is achieved. Specification in <a href="https://github.com/14MM47/tube_power/tree/main/designs/lantern-330-g" target="_blank" rel="noopener"><code>designs/lantern-330-g/</code></a>.</p>
+    <p><b>How to read the numbers.</b> Efficiency is measured against the wind passing the tube's frontal area. The low case is half the model figure, allowing for gusty wind. Yearly energy assumes a Rayleigh wind distribution with a 4.5 m/s mean at hub height and half the swinging time locked on. The benefit of end discs comes from an assumed end-loss model.</p>
+  </footer>
+</main>
+
+<div id="tip" role="tooltip" hidden></div>
+
+<script type="application/json" id="data-fine-25">__FINE25__</script>
+<script type="application/json" id="data-curves">__CURVES__</script>
+<script>
+(() => {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const SHELLS = ["2 mm single", "3 mm single", "3 mm sandwich", "5 mm sandwich", "5 mm storm"];
+  const SHELL_SHORT = ["2 mm, outer skin", "3 mm, outer skin", "3 mm, both faces", "5 mm, both faces", "5 mm storm"];
+  const LIMITS = [[1, "Reynolds"], [2, "Survival"], [4, "Operating loads"], [8, "Height"], [16, "Generator too weak"]];
+  const PARTS = ["neck", "skin", "wall", "discs", "hub"];
+  const NECKS = ["25 × 23", "30 × 28", "35 × 32", "40 × 37", "50 × 47"];
+  const gear = (t) => 0.1 / (t * 0.002 / (2 * Math.PI));
+  const nf = (v, d) => v.toLocaleString("en-GB", { minimumFractionDigits: d, maximumFractionDigits: d });
+  const fails = (f) => LIMITS.filter(([b]) => f & b).map(([, n]) => n);
+
+  const GRIDS = {
+    "fine-25": { inline: "data-fine-25", file: "grid-fine-25.json", req: 25, note: "D 200–300 mm in 10 mm steps", ref: { D: 250, N: 800, R: 20, S: 2, T: 12, name: "B" } },
+    "fine-40": { file: "grid-fine-40.json", req: 40, note: "D 200–300 mm in 10 mm steps", ref: { D: 250, N: 600, R: 20, S: 4, T: 12, name: "C" } },
+    "wide-25": { file: "grid-wide-25.json", req: 25, note: "D 100–400 mm in 20 mm steps", ref: null },
+    "wide-40": { file: "grid-wide-40.json", req: 40, note: "D 100–400 mm in 20 mm steps", ref: null },
+  };
+  function prepare(g, data) {
+    g.data = data;
+    const C = data.cols, uniq = (a) => Array.from(new Set(a)).sort((x, y) => x - y);
+    g.Ds = uniq(C.D); g.Ns = uniq(C.N); g.Rs = uniq(C.R); g.Ts = uniq(C.T);
+    g.b = -1;
+    if (g.ref) {
+      const r = g.ref;
+      for (let i = 0; i < data.n; i++) {
+        if (C.D[i] === r.D && C.N[i] === r.N && C.R[i] === r.R && C.S[i] === r.S && C.T[i] === r.T) { g.b = i; break; }
+      }
+    }
+  }
+  async function load(key) {
+    const g = GRIDS[key];
+    if (g.data) return g;
+    if (g.inline) { prepare(g, JSON.parse($(g.inline).textContent)); return g; }
+    const res = await fetch(g.file);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    prepare(g, await res.json());
+    return g;
+  }
+
+  const MEASURES = {
+    p: { title: "Best power", label: "electrical power at 4.5 m/s", unit: "W", d: 2, col: "P", get: (C, i) => C.P[i] / 1000 },
+    low: { title: "Best low-case power", label: "low-case power at 4.5 m/s", unit: "W", d: 2, col: "L", get: (C, i) => C.P[i] / 2000 },
+    a: { title: "Best yearly energy", label: "energy per year at a 4.5 m/s site", unit: "kWh", d: 1, col: "A", get: (C, i) => C.A[i] / 100 },
+    e: { title: "Best capture efficiency", label: "mechanical capture efficiency", unit: "%", d: 1, col: "E", get: (C, i) => C.E[i] / 10 },
+    s: { title: "Highest survivable wind", label: "highest wind survived, parked and braked", unit: "m/s", d: 1, col: "Sv", get: (C, i) => C.Sv[i] / 10 },
+  };
+
+  const COLS = [
+    { k: "rank", h: "Rank", key: true, l: true },
+    { k: "F", h: "Limits", key: true, l: true, v: (C, i) => C.F[i] },
+    { k: "D", h: "Diameter", u: "mm", key: true, v: (C, i) => C.D[i], f: (v) => v },
+    { k: "N", h: "Neck", u: "mm", key: true, v: (C, i) => C.N[i], f: (v) => v },
+    { k: "Nk", h: "Neck tube", u: "mm carbon", key: true, v: (C, i) => C.Nk[i], f: (v) => NECKS[v] },
+    { k: "R", h: "End discs", u: "ratio · mm", key: true, v: (C, i) => C.R[i] / 10, f: (v, C, i) => v <= 1 ? "None" : nf(v, 1) + "× · " + Math.round(v * C.D[i]) },
+    { k: "S", h: "Shell", u: "foam · skins", key: true, v: (C, i) => C.S[i], f: (v) => SHELLS[v] },
+    { k: "T", h: "Pulley", u: "teeth · ratio", key: true, v: (C, i) => C.T[i], f: (v) => v + " · " + nf(gear(v), 1) + ":1" },
+    { k: "P", h: "Power", u: "W at 4.5 m/s", key: true, v: (C, i) => C.P[i] / 1000, f: (v) => nf(v, 2) },
+    { k: "L", h: "Low case", u: "W", key: true, v: (C, i) => C.P[i] / 2000, f: (v) => nf(v, 2) },
+    { k: "A", h: "Energy", u: "kWh/yr", key: true, v: (C, i) => C.A[i] / 100, f: (v) => nf(v, 1) },
+    { k: "E", h: "Efficiency", u: "%", key: true, v: (C, i) => C.E[i] / 10, f: (v) => nf(v, 1) },
+    { k: "Sv", h: "Survives to", u: "m/s · limit", key: true, v: (C, i) => C.Sv[i] / 10, f: (v, C, i) => nf(v, 1) + " · " + PARTS[C.Sl[i]] },
+    { k: "Ci", h: "Cut-in", u: "m/s", key: true, v: (C, i) => C.Ci[i] / 10, f: (v) => nf(v, 1) },
+    { k: "M", h: "Mass ratio", key: true, v: (C, i) => C.M[i] / 100, f: (v) => nf(v, 2) },
+    { k: "W", h: "Swing", u: "± degrees", key: true, v: (C, i) => C.W[i] / 10, f: (v) => nf(v, 1) },
+    { k: "Ms", h: "Swinging mass", u: "g", v: (C, i) => C.Ms[i], f: (v) => v },
+    { k: "Q", h: "Peak torque", u: "N·m", v: (C, i) => C.Q[i] / 100, f: (v) => nf(v, 2) },
+    { k: "G", h: "Top accel.", u: "g", v: (C, i) => C.G[i] / 10, f: (v) => nf(v, 1) },
+    { k: "Fa", h: "Neck fatigue", u: "% of limit", v: (C, i) => C.Fa[i], f: (v) => v },
+    { k: "H", h: "Storm moment", u: "N·m at hinge", v: (C, i) => C.H[i], f: (v) => v },
+    { k: "Sp", h: "Each spring", u: "N/mm", v: (C, i) => C.Sp[i] / 10, f: (v) => nf(v, 1) },
+    { k: "Rt", h: "Circuit", u: "Ω", v: (C, i) => C.Rt[i], f: (v) => v },
+    { k: "V", h: "Peak EMF", u: "V", v: (C, i) => C.V[i] / 10, f: (v) => nf(v, 1) },
+    { k: "Rpm", h: "Generator", u: "peak rpm", v: (C, i) => C.Rpm[i], f: (v) => nf(v, 0) },
+    { k: "Re", h: "Reynolds", u: "at 7 m/s", v: (C, i) => C.Re[i] * 100, f: (v) => nf(v, 0) },
+  ];
+  const COLMAP = Object.fromEntries(COLS.map((c) => [c.k, c]));
+
+  const S = {
+    grid: "fine-25", measure: "p", dMin: 0, dMax: 0, nMin: 0, nMax: 0,
+    discs: new Set(), shells: new Set(), teeth: new Set(),
+    includeFail: false, cell: null, sort: { key: "P", dir: -1 }, shown: 100, allCols: false,
+  };
+  let R = null;
+
+  // ---------- controls
+  function fillSelect(sel, values, value) {
+    sel.innerHTML = values.map((v) => `<option value="${v}"${v === value ? " selected" : ""}>${v}</option>`).join("");
+  }
+  function chips(host, values, set, label) {
+    host.innerHTML = values.map((v) => `<button type="button" class="chip" data-v="${v}" aria-pressed="${set.has(v)}">${label(v)}</button>`).join("");
+  }
+  function resetFilters() {
+    const g = GRIDS[S.grid];
+    S.dMin = g.Ds[0]; S.dMax = g.Ds[g.Ds.length - 1];
+    S.nMin = g.Ns[0]; S.nMax = g.Ns[g.Ns.length - 1];
+    S.discs = new Set(g.Rs); S.shells = new Set([0, 1, 2, 3, 4]); S.teeth = new Set(g.Ts);
+    S.cell = null; S.shown = 100;
+  }
+  function buildControls() {
+    const g = GRIDS[S.grid];
+    for (const b of document.querySelectorAll(".seg button")) b.setAttribute("aria-pressed", String(b.dataset.grid === S.grid));
+    fillSelect($("d-min"), g.Ds, S.dMin); fillSelect($("d-max"), g.Ds, S.dMax);
+    fillSelect($("n-min"), g.Ns, S.nMin); fillSelect($("n-max"), g.Ns, S.nMax);
+    chips($("discs"), g.Rs, S.discs, (v) => v <= 10 ? "None" : nf(v / 10, 1));
+    chips($("shells"), [0, 1, 2, 3, 4], S.shells, (v) => SHELLS[v]);
+    chips($("teeth"), g.Ts, S.teeth, (v) => v + " teeth");
+    $("measure").value = S.measure;
+    $("include-fail").checked = S.includeFail;
+    $("all-cols").checked = S.allCols;
+  }
+  async function setGrid(key, fromHash) {
+    if (!GRIDS[key]) key = "fine-25";
+    for (const b of document.querySelectorAll(".seg button")) b.setAttribute("aria-pressed", String(b.dataset.grid === key));
+    if (!GRIDS[key].data) $("heat").innerHTML = `<p class="empty">Loading ${key.startsWith("wide") ? "28,800" : "22,440"} designs…</p>`;
+    try {
+      await load(key);
+    } catch (err) {
+      $("heat").innerHTML = `<p class="empty">This grid could not be loaded (${err.message}). Reload the page to try again, or use the CSV files in the repository.</p>`;
+      for (const b of document.querySelectorAll(".seg button")) b.setAttribute("aria-pressed", String(b.dataset.grid === S.grid));
+      return;
+    }
+    S.grid = key;
+    resetFilters();
+    buildControls();
+    update();
+    if (!fromHash && location.hash !== "#" + key) {
+      try { history.replaceState(null, "", "#" + key); } catch (e) { location.hash = key; }
+    }
+  }
+
+  // ---------- compute
+  function compute() {
+    const g = GRIDS[S.grid], C = g.data.cols, n = g.data.n, m = MEASURES[S.measure];
+    const match = [], cells = new Map();
+    for (let i = 0; i < n; i++) {
+      const D = C.D[i], N = C.N[i];
+      if (D < S.dMin || D > S.dMax || N < S.nMin || N > S.nMax) continue;
+      if (!S.discs.has(C.R[i]) || !S.shells.has(C.S[i]) || !S.teeth.has(C.T[i])) continue;
+      match.push(i);
+      const key = D * 10000 + N, v = m.get(C, i);
+      let c = cells.get(key);
+      if (!c) { c = { D, N, any: -1, anyV: -Infinity, pass: -1, passV: -Infinity, count: 0, passN: 0 }; cells.set(key, c); }
+      c.count++;
+      if (v > c.anyV) { c.any = i; c.anyV = v; }
+      if (C.F[i] === 0) { c.passN++; if (v > c.passV) { c.pass = i; c.passV = v; } }
+    }
+    const passing = match.filter((i) => C.F[i] === 0).sort((a, b) => m.get(C, b) - m.get(C, a));
+    const rank = new Map();
+    passing.forEach((i, r) => rank.set(i, r + 1));
+    return { g, C, m, match, cells, passing, rank, best: passing.length ? passing[0] : -1 };
+  }
+
+  // ---------- heat map
+  function themeColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function hexToRgb(h) { const x = parseInt(h.replace("#", ""), 16); return [(x >> 16) & 255, (x >> 8) & 255, x & 255]; }
+  function ramp() {
+    const stops = [1, 2, 3, 4, 5, 6, 7].map((k) => hexToRgb(themeColor("--h" + k)));
+    return (t) => {
+      const x = Math.max(0, Math.min(1, t)) * (stops.length - 1), j = Math.min(stops.length - 2, Math.floor(x)), f = x - j;
+      const a = stops[j], b = stops[j + 1];
+      return `rgb(${Math.round(a[0] + (b[0] - a[0]) * f)},${Math.round(a[1] + (b[1] - a[1]) * f)},${Math.round(a[2] + (b[2] - a[2]) * f)})`;
+    };
+  }
+  function shownIdx(c) { return S.includeFail ? c.any : c.pass; }
+
+  function renderHeat() {
+    const host = $("heat"), { g, C, m, cells, best } = R;
+    $("heat-title").textContent = m.title + " for each diameter and neck length";
+    $("heat-sub").textContent = `Each cell shows the best ${m.label} among the designs that match your filters (${g.note}; must survive ${g.req} m/s). ` +
+      (S.includeFail ? "Hatched cells: the best design there fails a limit." : "Hatched cells: no design there passes every limit.");
+    const xs = g.Ds.filter((d) => d >= S.dMin && d <= S.dMax);
+    const ys = g.Ns.filter((v) => v >= S.nMin && v <= S.nMax).slice().reverse();
+    if (!R.match.length) {
+      host.innerHTML = `<p class="empty">No designs match. Turn on at least one option in each group, or reset the filters.</p>`;
+      $("legend").innerHTML = "";
+      return;
+    }
+    let lo = Infinity, hi = -Infinity;
+    for (const c of cells.values()) {
+      const i = shownIdx(c);
+      if (i >= 0) { const v = m.get(C, i); lo = Math.min(lo, v); hi = Math.max(hi, v); }
+    }
+    const col = ramp(), scale = (v) => (hi > lo ? (v - lo) / (hi - lo) : 0.5);
+    const W = Math.max(300, host.clientWidth || 700), ml = 54, mr = 6, mt = 6, mb = 42;
+    const cw = (W - ml - mr) / xs.length, ch = ys.length > 12 ? 21 : 30, H = mt + ch * ys.length + mb;
+    const xStep = Math.max(1, Math.ceil(34 / cw)), yStep = ch < 16 ? 2 : 1;
+    const out = [];
+    out.push(`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${m.title} by tube diameter and neck length">`);
+    out.push(`<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${themeColor("--surface-2")}"/><line x1="0" y1="0" x2="0" y2="6" stroke="${themeColor("--hatch")}" stroke-width="1.5"/></pattern></defs>`);
+    ys.forEach((N, iy) => {
+      xs.forEach((D, ix) => {
+        const c = cells.get(D * 10000 + N);
+        const x = ml + ix * cw + 1, y = mt + iy * ch + 1, w = Math.max(1, cw - 2), h = ch - 2;
+        if (!c) {
+          out.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${themeColor("--surface-2")}"/>`);
+          return;
+        }
+        const i = shownIdx(c), isBest = i >= 0 && i === best, isSel = S.cell && S.cell.D === D && S.cell.N === N;
+        const failed = i < 0 || C.F[i] !== 0;
+        const fill = i >= 0 ? col(scale(m.get(C, i))) : "url(#hatch)";
+        const ring = isBest ? `stroke="${themeColor("--accent")}" stroke-width="2.5"` : isSel ? `stroke="${themeColor("--ink")}" stroke-width="2"` : `stroke="none"`;
+        out.push(`<g class="cell" tabindex="0" role="button" data-d="${D}" data-n="${N}" aria-label="${D} mm diameter, ${N} mm neck">`);
+        out.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="${fill}"/>`);
+        if (i >= 0 && failed) out.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="2" fill="url(#hatch)" opacity="0.75"/>`);
+        out.push(`<rect class="ring" x="${x + 0.5}" y="${y + 0.5}" width="${Math.max(0, w - 1)}" height="${h - 1}" rx="2" fill="none" ${ring}/>`);
+        out.push(`</g>`);
+      });
+    });
+    ys.forEach((N, iy) => { if (iy % yStep === 0) out.push(`<text class="tick" x="${ml - 6}" y="${mt + iy * ch + ch / 2 + 4}" text-anchor="end">${N}</text>`); });
+    xs.forEach((D, ix) => { if (ix % xStep === 0) out.push(`<text class="tick" x="${ml + ix * cw + cw / 2}" y="${mt + ys.length * ch + 15}" text-anchor="middle">${D}</text>`); });
+    out.push(`<text class="axis" x="${ml + (W - ml - mr) / 2}" y="${H - 6}" text-anchor="middle">Tube diameter (mm)</text>`);
+    out.push(`<text class="axis" transform="translate(13 ${mt + (ys.length * ch) / 2}) rotate(-90)" text-anchor="middle">Neck length (mm)</text>`);
+    out.push(`</svg>`);
+    host.innerHTML = out.join("");
+
+    const grad = [1, 2, 3, 4, 5, 6, 7].map((k) => themeColor("--h" + k)).join(",");
+    $("legend").innerHTML =
+      (isFinite(lo)
+        ? `<span class="ramp"><span>${nf(lo, m.d)}</span><span class="bar" style="background:linear-gradient(90deg,${grad})"></span><span>${nf(hi, m.d)} ${m.unit}</span></span>`
+        : "") +
+      `<span class="legitem"><span class="sw hatch"></span>${S.includeFail ? "Best design fails a limit" : "No passing design"}</span>` +
+      `<span class="legitem"><span class="sw best"></span>Best overall</span>` +
+      `<span class="legitem"><span class="sw sel"></span>Selected</span>`;
+  }
+
+  function cellTip(D, N) {
+    const { C, m, cells } = R, c = cells.get(D * 10000 + N);
+    if (!c) return `<b>${D} mm · ${N} mm neck</b><br>No designs match your filters here.`;
+    const lines = [`<b>${D} mm tube · ${N} mm neck</b>`];
+    const i = shownIdx(c);
+    const j = i >= 0 ? i : c.any;
+    if (i >= 0) {
+      lines.push(`Best: <b>${nf(m.get(C, i), m.d)} ${m.unit}</b>`);
+      lines.push(`${C.R[i] <= 10 ? "No discs" : nf(C.R[i] / 10, 1) + "× discs"} · ${SHELL_SHORT[C.S[i]]} · ${C.T[i]}-tooth pulley · ${NECKS[C.Nk[i]]} neck`);
+      if (C.F[i] !== 0) lines.push(`Fails: ${fails(C.F[i]).join(", ")}`);
+    } else {
+      lines.push(`No design here passes every limit.`);
+      lines.push(`Fails: ${fails(C.F[j]).join(", ")}`);
+    }
+    if (C.F[j] & 1) lines.push(`Reynolds ${nf(C.Re[j] * 100, 0)} at 7 m/s (limit 120,000)`);
+    lines.push(`Survives to ${nf(C.Sv[j] / 10, 1)} m/s (limited by the ${PARTS[C.Sl[j]]})`);
+    lines.push(`${nf(c.passN, 0)} of ${nf(c.count, 0)} matching designs pass`);
+    return lines.join("<br>");
+  }
+
+  // ---------- best design readout
+  function renderBest() {
+    const { g, C, m, best } = R, host = $("best");
+    if (best < 0) {
+      host.innerHTML = `<p class="eyebrow">Best passing design</p><p class="what">No design that matches your filters passes every limit. Include failing designs or widen the filters.</p>`;
+      return;
+    }
+    const i = best, discs = C.R[i] <= 10 ? "no end discs" : `${nf(C.R[i] / 10, 1)}× end discs (${Math.round((C.R[i] / 10) * C.D[i])} mm)`;
+    let cmp = "";
+    if (g.b >= 0) {
+      const vb = m.get(C, g.b), vbest = m.get(C, i);
+      const r = g.ref;
+      cmp = i === g.b
+        ? `<span>This is configuration ${r.name}'s geometry.</span>`
+        : `<span>Configuration ${r.name} (${r.D} mm, ${r.N} mm neck, ${nf(r.R / 10, 1)}× discs, ${SHELL_SHORT[r.S]}, ${r.T}-tooth pulley): <b>${nf(vb, m.d)} ${m.unit}</b>, ${nf(100 * (vb / vbest - 1), 0)}% against this design.</span>`;
+    } else {
+      cmp = `<span>Configurations B and C use a 250 mm tube, which is not on the wide grids. Switch to a fine grid to compare.</span>`;
+    }
+    host.innerHTML = `
+      <p class="eyebrow">Best passing design · survive ${g.req} m/s</p>
+      <p class="big">${nf(m.get(C, i), m.d)}<small>${m.unit}</small></p>
+      <p class="what">${m.label}</p>
+      <p class="settings"><b>${C.D[i]} mm</b> tube, <b>${C.N[i]} mm</b> neck (${NECKS[C.Nk[i]]} mm carbon), ${discs}, ${SHELL_SHORT[C.S[i]]} shell, ${C.T[i]}-tooth pulley (${nf(gear(C.T[i]), 1)}:1)</p>
+      <dl class="kv">
+        <dt>Power at 4.5 m/s</dt><dd>${nf(C.P[i] / 1000, 2)} W</dd>
+        <dt>Low case</dt><dd>${nf(C.P[i] / 2000, 2)} W</dd>
+        <dt>Energy, 4.5 m/s site</dt><dd>${nf(C.A[i] / 100, 1)} kWh/yr</dd>
+        <dt>Capture efficiency</dt><dd>${nf(C.E[i] / 10, 1)}%</dd>
+        <dt>Cut-in</dt><dd>${nf(C.Ci[i] / 10, 1)} m/s</dd>
+        <dt>Survives to</dt><dd>${nf(C.Sv[i] / 10, 1)} m/s (${PARTS[C.Sl[i]]})</dd>
+        <dt>Mass ratio</dt><dd>${nf(C.M[i] / 100, 2)}</dd>
+        <dt>Hinge swing</dt><dd>±${nf(C.W[i] / 10, 1)}°</dd>
+        <dt>Neck fatigue (worst)</dt><dd>${C.Fa[i]}% of limit</dd>
+      </dl>
+      <div class="compare">${cmp}<button type="button" class="btn" id="show-best">List designs in this cell</button></div>`;
+    $("show-best").addEventListener("click", () => { selectCell(C.D[i], C.N[i]); $("table").scrollIntoView({ behavior: "smooth", block: "start" }); });
+  }
+
+  // ---------- table
+  function renderTable() {
+    const { C, match, rank, passing, g } = R;
+    let rows = S.includeFail ? match.slice() : passing.slice();
+    if (S.cell) rows = rows.filter((i) => C.D[i] === S.cell.D && C.N[i] === S.cell.N);
+    const sk = S.sort.key, dir = S.sort.dir;
+    if (sk === "rank") rows.sort((a, b) => dir * ((rank.get(a) || 1e9) - (rank.get(b) || 1e9)));
+    else { const c = COLMAP[sk]; rows.sort((a, b) => dir * (c.v(C, a) - c.v(C, b)) || (rank.get(a) || 1e9) - (rank.get(b) || 1e9)); }
+
+    const cols = COLS.filter((c) => S.allCols || c.key);
+    $("table").tHead.innerHTML = "<tr>" + cols.map((c) => {
+      const sorted = sk === c.k ? ` aria-sort="${dir < 0 ? "descending" : "ascending"}"` : "";
+      return `<th class="${c.l ? "l" : ""}"${sorted}><button type="button" data-k="${c.k}">${c.h}<span class="arrow"></span>${c.u ? `<span class="u">${c.u}</span>` : `<span class="u">&nbsp;</span>`}</button></th>`;
+    }).join("") + "</tr>";
+
+    const show = rows.slice(0, S.shown);
+    $("table").tBodies[0].innerHTML = show.map((i) => "<tr>" + cols.map((c) => {
+      if (c.k === "rank") {
+        const r = rank.get(i);
+        return `<td class="l">${r ? nf(r, 0) : "—"}${i === g.b ? `<span class="pill" title="Configuration ${g.ref.name}'s geometry">${g.ref.name}</span>` : ""}</td>`;
+      }
+      if (c.k === "F") return C.F[i] === 0 ? `<td class="l"><span class="ok">✓ Passes</span></td>` : `<td class="l"><span class="bad">✕ ${fails(C.F[i]).join(", ")}</span></td>`;
+      const v = c.v(C, i);
+      return `<td>${c.f(v, C, i)}</td>`;
+    }).join("") + "</tr>").join("");
+
+    let txt = `${nf(match.length, 0)} designs match your filters · ${nf(passing.length, 0)} pass every limit`;
+    if (S.cell) txt += `<span class="cellchip">${S.cell.D} mm · ${S.cell.N} mm neck <button type="button" class="textbtn" id="clear-cell">Show all</button></span>`;
+    $("counts").innerHTML = txt;
+    if (S.cell) $("clear-cell").addEventListener("click", () => { S.cell = null; S.shown = 100; update(); });
+    $("more").hidden = rows.length <= S.shown;
+    $("more-note").textContent = `Showing ${nf(Math.min(rows.length, S.shown), 0)} of ${nf(rows.length, 0)}`;
+  }
+
+  // ---------- update and events
+  function update() {
+    R = compute();
+    renderHeat();
+    renderBest();
+    renderTable();
+  }
+  function selectCell(D, N) {
+    S.cell = S.cell && S.cell.D === D && S.cell.N === N ? null : { D, N };
+    S.shown = 100;
+    update();
+  }
+
+  document.querySelector(".seg").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) setGrid(b.dataset.grid); });
+  $("measure").addEventListener("change", (e) => { S.measure = e.target.value; S.sort = { key: MEASURES[S.measure].col, dir: -1 }; update(); });
+  for (const [id, lo, hi] of [["d-min", "dMin", "dMax"], ["d-max", "dMin", "dMax"], ["n-min", "nMin", "nMax"], ["n-max", "nMin", "nMax"]]) {
+    $(id).addEventListener("change", (e) => {
+      const v = Number(e.target.value);
+      if (id.endsWith("min")) S[lo] = v; else S[hi] = v;
+      if (S[lo] > S[hi]) { const t = S[lo]; S[lo] = S[hi]; S[hi] = t; buildControls(); }
+      S.cell = null; S.shown = 100; update();
+    });
+  }
+  for (const [id, key] of [["discs", "discs"], ["shells", "shells"], ["teeth", "teeth"]]) {
+    $(id).addEventListener("click", (e) => {
+      const b = e.target.closest(".chip"); if (!b) return;
+      const v = Number(b.dataset.v), set = S[key];
+      if (set.has(v)) set.delete(v); else set.add(v);
+      b.setAttribute("aria-pressed", String(set.has(v)));
+      S.shown = 100; update();
+    });
+  }
+  $("include-fail").addEventListener("change", (e) => { S.includeFail = e.target.checked; S.shown = 100; update(); });
+  $("all-cols").addEventListener("change", (e) => { S.allCols = e.target.checked; renderTable(); });
+  $("reset").addEventListener("click", () => { resetFilters(); S.includeFail = false; buildControls(); update(); });
+  $("more").addEventListener("click", () => { S.shown += 100; renderTable(); });
+  $("table").tHead.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-k]"); if (!b) return;
+    const k = b.dataset.k;
+    S.sort = S.sort.key === k ? { key: k, dir: -S.sort.dir } : { key: k, dir: k === "rank" ? 1 : -1 };
+    renderTable();
+  });
+
+  const tip = $("tip");
+  function placeTip(x, y) {
+    const r = tip.getBoundingClientRect();
+    let left = x + 14, top = y + 14;
+    if (left + r.width > window.innerWidth - 8) left = x - r.width - 14;
+    if (top + r.height > window.innerHeight - 8) top = y - r.height - 14;
+    tip.style.left = Math.max(8, left) + "px"; tip.style.top = Math.max(8, top) + "px";
+  }
+  const heat = $("heat");
+  heat.addEventListener("pointermove", (e) => {
+    const g = e.target.closest(".cell");
+    if (!g || !R) { tip.hidden = true; return; }
+    tip.innerHTML = cellTip(Number(g.dataset.d), Number(g.dataset.n));
+    tip.hidden = false; placeTip(e.clientX, e.clientY);
+  });
+  heat.addEventListener("pointerleave", () => { tip.hidden = true; });
+  heat.addEventListener("click", (e) => { const g = e.target.closest(".cell"); if (g) { tip.hidden = true; selectCell(Number(g.dataset.d), Number(g.dataset.n)); } });
+  heat.addEventListener("keydown", (e) => {
+    const g = e.target.closest(".cell"); if (!g) return;
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectCell(Number(g.dataset.d), Number(g.dataset.n)); }
+  });
+  heat.addEventListener("focusin", (e) => {
+    const g = e.target.closest(".cell"); if (!g || !R) return;
+    tip.innerHTML = cellTip(Number(g.dataset.d), Number(g.dataset.n)); tip.hidden = false;
+    const r = g.getBoundingClientRect(); placeTip(r.right, r.bottom);
+  });
+  heat.addEventListener("focusout", () => { tip.hidden = true; });
+
+  let rt = 0;
+  if ("ResizeObserver" in window) new ResizeObserver(() => { cancelAnimationFrame(rt); rt = requestAnimationFrame(() => R && renderHeat()); }).observe(heat);
+  const rethemer = () => R && renderHeat();
+  try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rethemer); } catch (e) {}
+  new MutationObserver(rethemer).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  window.addEventListener("hashchange", () => { const k = location.hash.slice(1); if (GRIDS[k] && k !== S.grid) setGrid(k, true); });
+
+  // ---------- power curves
+  const CURVES = JSON.parse($("data-curves").textContent);
+  const CV = { sel: CURVES.designs.some((d) => d.id === "G") ? "G" : CURVES.designs[0].id, cmp: "B", hover: -1 };
+  const SERIES_VIV = [
+    { k: "des", name: "As designed", note: "track to 7 m/s, cap to 8, then brake", color: "--s1", width: 2.75, dash: "" },
+    { k: "lim", name: "Kept generating within limits", note: "every part within its limits", color: "--s2", width: 2, dash: "" },
+    { k: "pot", name: "Model potential", note: "if it stayed locked on and nothing failed; not achievable", color: "--s3", width: 2, dash: "6 4" },
+    { k: "wind", name: "Wind passing the tube", note: "", color: "--wind", width: 1.5, dash: "2 3" },
+  ];
+  const SERIES_G = [
+    { k: "lim", name: "Electrical", note: "pitch-regulated; every part within its limits", color: "--s1", width: 2.75, dash: "" },
+    { k: "pot", name: "Potential face-on", note: "no pitch and no limits; not achievable at high wind", color: "--s3", width: 2, dash: "6 4" },
+    { k: "wind", name: "Wind passing the prism", note: "", color: "--wind", width: 1.5, dash: "2 3" },
+  ];
+  const isG = (d) => d && d.kind === "gallop";
+  const seriesFor = (d) => !isG(d) ? SERIES_VIV : d.summary.rated ? SERIES_G
+    : SERIES_G.map((s) => s.k === "lim" ? { ...s, note: "face-on, no power cap; every part within its limits" } : s);
+  const noteText = (i) => {
+    const n = CURVES.notes[i] || "";
+    if (n === "unconstrained") return "free";
+    if (n === "idle (friction)" || n === "idle (below quasi-steady range)") return "too little wind";
+    if (n === "feathered (cut-out)") return "feathered";
+    if (n === "limited by power rating") return "held at rating by pitch";
+    if (n.startsWith("braked (")) return "brake: " + n.slice(8, -1);
+    if (n.startsWith("limited by ")) return "held by " + n.slice(11);
+    return n;
+  };
+  const fmtW = (v) => v <= 0 ? "0" : v < 0.1 ? nf(v, 3) : v < 10 ? nf(v, 2) : v < 100 ? nf(v, 1) : nf(v, 0);
+  function curveDesign() { return CURVES.designs.find((d) => d.id === CV.sel) || CURVES.designs[0]; }
+  function cmpDesign() { return CV.cmp && CV.cmp !== CV.sel ? CURVES.designs.find((d) => d.id === CV.cmp) || null : null; }
+  const cmpSeries = (c) => ({ k: "lim", name: "Compare: " + c.short, note: isG(c) ? "electrical" : "kept generating within limits", color: "--ink-2", width: 2, dash: "" });
+  const keyHtml = (s) =>
+    `<span class="key"><svg width="26" height="10" aria-hidden="true"><line x1="1" y1="5" x2="25" y2="5" stroke="${themeColor(s.color)}" stroke-width="${Math.max(2, s.width)}" stroke-dasharray="${s.dash}" stroke-linecap="round"/></svg>${s.name}${s.note ? ` <span class="dim">(${s.note})</span>` : ""}</span>`;
+
+  function renderCurveControls() {
+    $("curve-design").innerHTML = CURVES.designs.map((d) => `<option value="${d.id}">${d.name}</option>`).join("");
+    $("curve-design").value = CV.sel;
+    $("curve-cmp").innerHTML = `<option value="">Nothing</option>` + CURVES.designs.filter((d) => d.id !== CV.sel)
+      .map((d) => `<option value="${d.id}">${d.short}</option>`).join("");
+    $("curve-cmp").value = cmpDesign() ? CV.cmp : "";
+    const c = cmpDesign();
+    $("curve-key").innerHTML = seriesFor(curveDesign()).map(keyHtml).join("") + (c ? keyHtml(cmpSeries(c)) : "");
+  }
+
+  function renderCurve() {
+    const d = curveDesign(), U = CURVES.speeds, host = $("curve");
+    const W = Math.max(300, host.clientWidth || 700), H = W < 560 ? 300 : Math.min(500, Math.round(W * 0.62));
+    const ml = 58, mr = 14, mt = 26, mb = 42, pw = W - ml - mr, ph = H - mt - mb;
+    const yMin = -2, yMax = 4;
+    const X = (u) => ml + (u / 40) * pw;
+    const Y = (p) => mt + (1 - (Math.log10(p) - yMin) / (yMax - yMin)) * ph;
+    const c = cmpDesign(), SER = seriesFor(d);
+    const o = [`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Electrical power against wind speed for ${d.name}${c ? ", compared with " + c.short : ""}">`];
+    const lbl = (x0, x1, long, short) => {
+      const w = x1 - x0, t = w > long.length * 6.6 ? long : w > short.length * 6.6 ? short : "";
+      if (t) o.push(`<text class="bandlbl" x="${(x0 + x1) / 2}" y="${mt - 8}" text-anchor="middle">${t}</text>`);
+    };
+    if (isG(d) && d.summary.rated) {
+      // galloping: sharp corners, no Reynolds-number bands; shade where pitch holds the rating
+      const r0 = X(Math.min(40, d.summary.rated_at));
+      o.push(`<rect x="${r0}" y="${mt}" width="${Math.max(0, X(40) - r0)}" height="${ph}" fill="${themeColor("--band1")}"/>`);
+      lbl(ml, r0, "Output grows with wind", "Growing");
+      lbl(r0, X(40), `Held at ${nf(d.summary.rated, 0)} W by pitch`, "Rated");
+    } else if (isG(d)) {
+      const r0 = X(15);
+      o.push(`<rect x="${r0}" y="${mt}" width="${X(40) - r0}" height="${ph}" fill="${themeColor("--band1")}"/>`);
+      lbl(ml, r0, "Low wind", "Low");
+      lbl(r0, X(40), "15–40 m/s: face-on, no power cap", "No cap");
+    } else {
+      // flow-regime bands
+      const reTested = 1.2e5 * 1.5e-5 / (d.D / 1000), reCrisis = 2.0e5 * 1.5e-5 / (d.D / 1000);
+      const b1 = X(Math.min(40, reTested)), b2 = X(Math.min(40, reCrisis));
+      o.push(`<rect x="${b1}" y="${mt}" width="${Math.max(0, b2 - b1)}" height="${ph}" fill="${themeColor("--band1")}"/>`);
+      o.push(`<rect x="${b2}" y="${mt}" width="${Math.max(0, X(40) - b2)}" height="${ph}" fill="${themeColor("--band2")}"/>`);
+      lbl(ml, b1, "Tested flow", "Tested");
+      lbl(b1, b2, "Beyond tested", "Beyond");
+      lbl(b2, X(40), "Drag crisis: no harvesting credit", "Drag crisis");
+    }
+    // grid
+    for (let e = yMin; e <= yMax; e++) {
+      const y = Y(Math.pow(10, e));
+      o.push(`<line x1="${ml}" x2="${ml + pw}" y1="${y}" y2="${y}" stroke="${themeColor("--grid")}" stroke-width="1"/>`);
+      const lbl = e < 0 ? (e === -2 ? "0.01" : "0.1") : e === 3 ? "1k" : e === 4 ? "10k" : String(Math.pow(10, e));
+      o.push(`<text class="tick" x="${ml - 8}" y="${y + 4}" text-anchor="end">${lbl}</text>`);
+    }
+    for (let u = 0; u <= 40; u += 5) {
+      o.push(`<line x1="${X(u)}" x2="${X(u)}" y1="${mt + ph}" y2="${mt + ph + 4}" stroke="${themeColor("--line")}"/>`);
+      o.push(`<text class="tick" x="${X(u)}" y="${mt + ph + 17}" text-anchor="middle">${u}</text>`);
+    }
+    o.push(`<text class="axis" x="${ml + pw / 2}" y="${H - 6}" text-anchor="middle">Wind speed (m/s)</text>`);
+    o.push(`<text class="axis" transform="translate(14 ${mt + ph / 2}) rotate(-90)" text-anchor="middle">Power (W)</text>`);
+    // series, drawn back to front (the comparison furthest back); zero or tiny values break the line
+    const layers = SER.map((s) => [s, d]).reverse();
+    if (c) layers.unshift([cmpSeries(c), c]);
+    for (const [s, src] of layers) {
+      let path = "", pen = false;
+      src[s.k].forEach((v, i) => {
+        if (v >= 0.01 && v <= 1e4) { path += (pen ? "L" : "M") + X(U[i]).toFixed(1) + " " + Y(v).toFixed(1); pen = true; }
+        else pen = false;
+      });
+      o.push(`<path d="${path}" fill="none" stroke="${themeColor(s.color)}" stroke-width="${s.width}" stroke-dasharray="${s.dash}" stroke-linejoin="round" stroke-linecap="round"/>`);
+    }
+    // hover layer
+    if (CV.hover >= 0) {
+      const i = CV.hover, x = X(U[i]);
+      o.push(`<line x1="${x}" x2="${x}" y1="${mt}" y2="${mt + ph}" stroke="${themeColor("--ink-2")}" stroke-width="1" stroke-dasharray="3 3"/>`);
+      for (const [s, src] of layers) {
+        const v = src[s.k][i];
+        if (v >= 0.01 && v <= 1e4) o.push(`<circle cx="${x}" cy="${Y(v)}" r="4.5" fill="${themeColor(s.color)}" stroke="${themeColor("--surface")}" stroke-width="2"/>`);
+      }
+    }
+    o.push(`<rect id="curve-hit" x="${ml}" y="${mt}" width="${pw}" height="${ph}" fill="transparent"/>`);
+    o.push(`</svg>`);
+    host.innerHTML = o.join("");
+    host._geom = { ml, pw };
+  }
+
+  function renderCurveSide() {
+    const d = curveDesign(), s = d.summary, c = cmpDesign();
+    const annual = (x) => isG(x) ? x.summary.annual : x.summary.annual_lim;
+    const vs = c ? ` ${c.short}${isG(c) ? "" : " kept generating"}: <b>${nf(annual(c), 1)} kWh</b>.` : "";
+    $("curve-sum").innerHTML = isG(d) ? `
+      <span>${d.desc}</span>
+      <span>Generates <b>${nf(s.from, 1)}–${nf(s.to, 0)} m/s</b> without a gap. ` + (s.rated
+        ? `Reaches its <b>${nf(s.rated, 0)} W</b> rating at ${nf(s.rated_at, 1)} m/s and pitch holds it there to ${nf(s.to, 0)} m/s; feathers above.</span>`
+        : `No power cap and no pitch regulation: average <b>${nf(s.mean_15_40, 0)} W</b> from 15 to 40 m/s, <b>${nf(s.p40, 0)} W</b> at 40 m/s; feathers above.</span>`) + `
+      <span>Survives <b>${nf(s.survival, 1)} m/s</b> feathered and braked (limited by the ${s.survival_part}).</span>
+      <span>Yearly energy at a 4.5 m/s site: <b>${nf(s.annual, 1)} kWh</b>.${vs}</span>` : `
+      <span>${d.desc}</span>
+      <span>As designed: generates <b>${nf(s.des_from, 1)}–${nf(s.des_to, 1)} m/s</b>, peak <b>${nf(s.des_peak, 1)} W</b>, then brakes.</span>
+      <span>Kept generating within limits: <b>${nf(s.lim_from, 1)}–${nf(s.lim_to, 1)} m/s</b>, peak <b>${nf(s.lim_peak, 1)} W</b> at ${nf(s.lim_peak_u, 1)} m/s. Above that: ${s.lim_stop}.</span>
+      <span>Yearly energy at a 4.5 m/s site: <b>${nf(s.annual_des, 1)} kWh</b> as designed, <b>${nf(s.annual_lim, 1)} kWh</b> within limits.${vs}</span>`;
+    const KEY = [2, 3, 4.5, 6, 7, 8, 9, 10, 11, 12, 15, 20, 25, 30, 40];
+    const cmpTh = c ? `<th>${c.short}<span class="u">W</span></th>` : "";
+    $("curve-table").tHead.innerHTML = isG(d)
+      ? `<tr><th>Wind<span class="u">m/s</span></th><th>Electrical<span class="u">W</span></th><th class="l">Governed by</th><th>Pitch<span class="u">°</span></th><th>Swing<span class="u">Hz</span></th>${cmpTh}<th>Potential<span class="u">W</span></th><th>Wind<span class="u">W</span></th></tr>`
+      : `<tr><th>Wind<span class="u">m/s</span></th><th>As designed<span class="u">W</span></th><th>Within limits<span class="u">W</span></th><th class="l">Within limits<span class="u">governed by</span></th>${cmpTh}<th>Potential<span class="u">W</span></th><th>Wind<span class="u">W</span></th></tr>`;
+    $("curve-table").tBodies[0].innerHTML = KEY.map((u) => {
+      const i = CURVES.speeds.indexOf(u);
+      if (i < 0) return "";
+      const cmpTd = c ? `<td>${fmtW(c.lim[i])}</td>` : "";
+      const row = isG(d)
+        ? `<td>${u}</td><td>${fmtW(d.lim[i])}</td><td class="l">${noteText(d.note[i])}</td><td>${d.lim[i] > 0 ? nf(d.pitch[i], 1) : "–"}</td><td>${d.lim[i] > 0 ? nf(d.freq[i], 2) : "–"}</td>${cmpTd}<td>${fmtW(d.pot[i])}</td><td>${fmtW(d.wind[i])}</td>`
+        : `<td>${u}</td><td>${fmtW(d.des[i])}</td><td>${fmtW(d.lim[i])}</td><td class="l">${noteText(d.note[i])}</td>${cmpTd}<td>${fmtW(d.pot[i])}</td><td>${fmtW(d.wind[i])}</td>`;
+      return `<tr${i === CV.hover ? ' style="background:var(--surface-2)"' : ""}>${row}</tr>`;
+    }).join("");
+  }
+
+  function curveTip(i, cx, cy) {
+    const d = curveDesign(), c = cmpDesign();
+    const cmpLine = c ? `<br>${c.short}: <b>${fmtW(c.lim[i])} W</b>` : "";
+    tip.innerHTML = `<b>${CURVES.speeds[i]} m/s</b><br>` + (isG(d)
+      ? `Electrical: <b>${fmtW(d.lim[i])} W</b> (${noteText(d.note[i])})` +
+        (d.lim[i] > 0 ? `<br>Pitch ${nf(d.pitch[i], 1)}°, swinging at ${nf(d.freq[i], 2)} Hz` : "") +
+        `${cmpLine}<br>Potential face-on: ${fmtW(d.pot[i])} W<br>Wind passing the prism: ${fmtW(d.wind[i])} W`
+      : `As designed: <b>${fmtW(d.des[i])} W</b><br>` +
+        `Within limits: <b>${fmtW(d.lim[i])} W</b> (${noteText(d.note[i])})${cmpLine}<br>` +
+        `Model potential: ${fmtW(d.pot[i])} W<br>Wind passing the tube: ${fmtW(d.wind[i])} W`);
+    tip.hidden = false; placeTip(cx, cy);
+  }
+  const curveHost = $("curve");
+  curveHost.addEventListener("pointermove", (e) => {
+    const g = curveHost._geom; if (!g) return;
+    const svg = curveHost.querySelector("svg"), r = svg.getBoundingClientRect();
+    const sx = (e.clientX - r.left) * (svg.viewBox.baseVal.width / r.width);
+    const u = ((sx - g.ml) / g.pw) * 40;
+    if (u < 0 || u > 40.5) { tip.hidden = true; return; }
+    let best = 0, bd = Infinity;
+    CURVES.speeds.forEach((s, i) => { const dd = Math.abs(s - u); if (dd < bd) { bd = dd; best = i; } });
+    if (best !== CV.hover) { CV.hover = best; renderCurve(); renderCurveSide(); }
+    curveTip(best, e.clientX, e.clientY);
+  });
+  curveHost.addEventListener("pointerleave", () => { tip.hidden = true; CV.hover = -1; renderCurve(); renderCurveSide(); });
+  $("curve-design").addEventListener("change", (e) => {
+    CV.sel = e.target.value; CV.hover = -1;
+    if (CV.cmp === CV.sel) CV.cmp = "";
+    renderCurveControls(); renderCurve(); renderCurveSide();
+  });
+  $("curve-cmp").addEventListener("change", (e) => { CV.cmp = e.target.value; CV.hover = -1; renderCurveControls(); renderCurve(); renderCurveSide(); });
+  if ("ResizeObserver" in window) { let ct = 0; new ResizeObserver(() => { cancelAnimationFrame(ct); ct = requestAnimationFrame(renderCurve); }).observe(curveHost); }
+  const recurve = () => { renderCurveControls(); renderCurve(); };
+  try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", recurve); } catch (e) {}
+  new MutationObserver(recurve).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  renderCurveControls(); renderCurve(); renderCurveSide();
+
+  const start = location.hash.slice(1);
+  setGrid(GRIDS[start] ? start : "fine-25", true);
+})();
+</script>

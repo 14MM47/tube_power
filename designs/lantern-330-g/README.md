@@ -242,7 +242,7 @@ As with the vortex designs, the optimiser presses against the edges of the model
 2. **The side-force curve at large angles** and any hysteresis. The prism top reaches ~21° of flow angle at the best load; the cubic fit is trusted to 23°.
 3. **Finite span.** A 1 m prism with 660 mm end plates is assumed to behave two-dimensionally; the end-plate benefit comes from an assumed end-loss model.
 4. **The feathered state.** It assumes the 45° diamond is galloping-stable with Cd 1.65. Some studies report vortex-induced vibration at 45°; the shorted generator damps it. Check this in the static test.
-5. **Lean under pitch.** The steady side force while pitched leans the prism up to 6°. The time-domain check suggests the real lean is about 20% smaller than the calculator's.
+5. **Lean under pitch.** The steady side force while pitched leans the prism up to 6°. The time-step check (`tools/galloping_timestep_check.py`) puts the real lean about 40% lower than the calculator's at 30 m/s, so the calculator errs on the safe side. 330-GH never pitches, so it has no lean.
 6. **Generator constants.** The 8108 values are typical for the class, not measured.
 7. **Post and foundation.** A 3 kN·m base moment is a real structure. Use a tilt-down guyed post and local wind-code checks.
 

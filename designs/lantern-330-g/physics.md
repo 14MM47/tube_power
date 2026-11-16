@@ -59,7 +59,9 @@ With no friction at all, the share of the wind through the prism (½ ρ U³ D L)
 
 That is 4.9% for a prism translating sideways, and less for a hinged one: I₂²/(I₄ L) is 0.56 with no neck and 0.80 with 330-G's 600 mm neck. 330-G's ceiling is 3.9% (its end plates remove the end loss). That is roughly a fifth of what the light VIV tube reaches at its tuned speed. Galloping makes up for it only by working at every wind speed.
 
-A time-step simulation of the hinged prism with the full force distribution along its span agrees with this harmonic balance to within 1% on power and swing, face-on and pitched. While pitched, the simulated steady lean is about 20% smaller than the calculator's, because the α² term reduces the mean side force. The calculator ignores that reduction, which errs on the safe side.
+A time-step simulation of the hinged prism, with the full force distribution along its span, checks this harmonic balance ([`tools/galloping_timestep_check.py`](../../tools/galloping_timestep_check.py)):
+- **Face-on**, it agrees within 0.2% on swing rate and power and within 1% on swing (330-G at 10 m/s; 330-GH at 20 and 40 m/s).
+- **Pitched** (330-G at 30 m/s), the simulation gives 2% more power and swing. Its steady lean is about 40% smaller (2.7° against 4.6°), because the α² term reduces the mean side force. The calculator ignores that reduction, which errs on the safe side.
 
 Two things do **not** appear in the power:
 - **The prism's mass.** It sets the frequency for a given spring, and the inertial loads, but not the energy. So the prism can be built sturdy.

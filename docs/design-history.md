@@ -135,7 +135,7 @@ See [../designs/lantern-250/](../designs/lantern-250/).
 
 **Model.** A new calculator, `tools/galloping_calc.py`:
 - quasi-steady galloping with Parkinson's cubic side-force curve (square: A1 = 2.3, A3 = 18), by harmonic balance for the hinged prism, with Coulomb friction;
-- checked against a time-step simulation to within 1%.
+- checked against a time-step simulation (`tools/galloping_timestep_check.py`): within 0.2% face-on, about 2% when pitched.
 
 At every wind speed the controller chooses three things, within every limit:
 - the pitch of the prism about its own axis;

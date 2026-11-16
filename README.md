@@ -70,7 +70,9 @@ python3 tools/galloping_calc.py curve --config GH --compare
 | [docs/design-history.md](docs/design-history.md) | Earlier designs (tuned mast with mechanical rectifier, 40 mm PVC, 40 mm carbon, contactless generators) and what each taught |
 | [research/](research/) | Research report and notes on bladeless turbines, DIY builds, patents and academic work |
 | [tools/lantern_calc.py](tools/lantern_calc.py) | Design calculator, wind-envelope checker and grid-search optimiser (Python 3, standard library only) |
-| [tools/galloping_calc.py](tools/galloping_calc.py) | The same for the galloping version: pitch-regulated square prism, every limit from 1 to 45 m/s, parallel grid search |
+| [tools/galloping_calc.py](tools/galloping_calc.py) | The same for the galloping versions (330-G, and 330-GH with `--config GH`): every limit from 1 to 45 m/s, parallel grid search |
+| [tools/galloping_timestep_check.py](tools/galloping_timestep_check.py) | Checks the galloping calculator against a direct time-step simulation of the swinging prism |
+| [tools/grid_page/](tools/grid_page/) | Source and build script for the interactive design-grid page (power curves 1–40 m/s with a compare overlay, and every grid point) |
 
 ## Calculator
 
