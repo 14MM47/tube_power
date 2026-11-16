@@ -1,4 +1,4 @@
-# Design history: from a bladeless mast to Lantern 250
+# Design history: from a bladeless mast to Lantern 250 and 330-G
 
 This records how the design evolved, step by step, and what each step taught. The earlier designs' figures come from hand calculations made in conversation with an earlier version of the same models. Treat them as estimates, as for everything else here.
 
@@ -129,6 +129,37 @@ See [../designs/lantern-250/](../designs/lantern-250/).
 
 **Result:** a VIV tube generates nothing above about 11 m/s, whatever the control. The generator's heat limit, the neck's bending mode and the drag crisis (Reynolds number above 200,000) all stop it there, even though the model's potential reaches hundreds of watts. Keeping it generating to ~11 m/s adds ~60% to yearly energy at a 4.5 m/s site, in untested flow.
 
+## 8. A galloping version that keeps generating to 40 m/s: Lantern 330-G
+
+**Brief:** design a galloping version that keeps generating up to 40 m/s.
+
+**Model.** A new calculator, `tools/galloping_calc.py`:
+- quasi-steady galloping with Parkinson's cubic side-force curve (square: A1 = 2.3, A3 = 18), by harmonic balance for the hinged prism, with Coulomb friction;
+- checked against a time-step simulation to within 1%.
+
+At every wind speed the controller chooses three things, within every limit:
+- the pitch of the prism about its own axis;
+- the generator load;
+- the swing frequency (the lowest that keeps the swing at ±15°).
+
+**What the physics says:**
+- **Galloping power doesn't depend on mass or swing frequency.** So the prism can be sturdy (mass ratio 10), and the frequency is chosen for the loads: U/(fD) ≈ 22 at every wind, where the theory is valid.
+- **A square captures at most ~4% of the wind passing it.** The light round tube captures 15–20% at its tuned speed. Galloping makes up for it only by working at every wind speed.
+- **Pitch is a natural throttle.** The effective slope A1 − 3A3β² reaches zero at 11.8°. At 45° the square is stable and the side force vanishes, so the machine can be switched off aerodynamically.
+- **Changes from the vortex designs:**
+  - ball bearings instead of polymer bushings (storm drag made bushing friction prohibitive, and the ±15° swing removes the false-brinelling worry);
+  - a 100 W-class generator (the 5208 overheats before holding 20 W).
+
+**Search.**
+- 5,280 designs. Hub strength was the main lever: 4.2 kWh/yr at a 4.5 m/s site with a 500 N·m hub, 6.2 with 800.
+- Width went to the assumed aspect-ratio limit (330 mm on 1 m). Relaxing it and strengthening the hub further adds only 5%, because the end plates then limit storm survival.
+
+**Result: Lantern 330-G.**
+- 2.5 m/s cut-in. 0.40 W at 4.5 m/s, 5.5 W at 10 m/s, 20 W held by pitch from 15.5 to 40 m/s.
+- Survives 46.7 m/s feathered.
+- Yearly energy beats 250-B as designed above about a 5 m/s site mean, and 250-B kept generating above about 7 m/s.
+- The biggest unknown is turbulence: 20% off A1 costs 40% of the energy. So the first build step is a static side-force test.
+
 ## Progression in one table
 
 | Design | Mass ratio | Electrical at 4.5 m/s (central) |
@@ -140,3 +171,4 @@ See [../designs/lantern-250/](../designs/lantern-250/).
 | Lantern 250-A (with all later corrections) | 4.7 | 1.57 W |
 | **Lantern 250-B** (survives 25 m/s) | **5.5** | **2.00 W** |
 | **Lantern 250-C** (survives 40 m/s) | **7.7** | **1.84 W** |
+| **Lantern 330-G** (galloping; generates to 40 m/s, 20 W from 15.5 m/s) | **10** | **0.40 W** |

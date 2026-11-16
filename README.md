@@ -28,6 +28,23 @@ The swing stays in step with the wind by sliding a spring carriage along a lever
 
 For scale, a 100 W solar panel gives roughly 90–150 kWh a year. This is a physics and mechanism project. The aim of a first build is to measure a power curve, which nobody has published for a tube like this.
 
+## Galloping version: Lantern 330-G
+
+A vortex-shedding tube generates nothing above about 11 m/s, whatever the control. **Lantern 330-G** keeps generating to 40 m/s by galloping instead:
+- a 330 mm square prism, 1 m tall, with 660 mm square end plates;
+- on a 600 mm carbon neck and the same kind of hinge, spring carriage, belt and yaw head;
+- with a pitch drive that turns the prism on its own axis.
+
+A square's side force pushes it the way it is already moving, so it extracts energy at any wind above onset, with no lock-on band. It generates from about 2.5 m/s and reaches its 20 W rating at 15.5 m/s. Above that, pitching it up to 10° holds 20 W all the way to 40 m/s. Above 40 m/s, or on any fault, a spring turns it 45° (feathered), where it neither gallops nor pushes sideways. It survives 46.7 m/s.
+
+| Site mean wind | 330-G (galloping) | 250-B as designed | 250-B kept generating |
+|---|---|---|---|
+| 4.5 m/s | 6.2 kWh/yr | 9.1 | 14.7 |
+| 6.5 m/s | 19.0 | 9.5 | 24.3 |
+| 7.5 m/s | 27.8 | 8.6 | 25.3 |
+
+Galloping catches only ~4% of the wind passing it, against 15–20% for the light round tube at its tuned speed. So 330-G wins only at windy sites, and the smooth-flow coefficients it rests on may be optimistic in gusty air. See [designs/lantern-330-g/](designs/lantern-330-g/).
+
 ## Repository map
 
 | Path | Contents |
@@ -37,9 +54,11 @@ For scale, a 100 W solar panel gives roughly 90–150 kWh a year. This is a phys
 | [designs/lantern-250/build-and-test.md](designs/lantern-250/build-and-test.md) | Parts list, build order, bench and outdoor tests, safety |
 | [designs/lantern-250/calculator-output/](designs/lantern-250/calculator-output/) | Reports, 1–40 m/s wind envelopes and 1–40 m/s power curves for A, B and C; optimisation sweeps |
 | [designs/lantern-250/calculator-output/grid/](designs/lantern-250/calculator-output/grid/) | Full optimisation grids as CSV: 102,480 design points for 25 m/s and 40 m/s survival, passing and failing, 41 columns each |
+| [designs/lantern-330-g/](designs/lantern-330-g/) | The galloping version that generates to 40 m/s: specification, physics, build and test plan (static side-force test first), calculator output and grids |
 | [docs/design-history.md](docs/design-history.md) | Earlier designs (tuned mast with mechanical rectifier, 40 mm PVC, 40 mm carbon, contactless generators) and what each taught |
 | [research/](research/) | Research report and notes on bladeless turbines, DIY builds, patents and academic work |
 | [tools/lantern_calc.py](tools/lantern_calc.py) | Design calculator, wind-envelope checker and grid-search optimiser (Python 3, standard library only) |
+| [tools/galloping_calc.py](tools/galloping_calc.py) | The same for the galloping version: pitch-regulated square prism, every limit from 1 to 45 m/s, parallel grid search |
 
 ## Calculator
 
@@ -108,3 +127,21 @@ The optimiser pushes to whatever edge the model rewards:
 - The neck is capped by the hub's storm-moment limit.
 
 Read [section 13 of the specification](designs/lantern-250/README.md#13-optimisation-results) before trusting a sweep result.
+
+### Galloping calculator
+
+Report for Lantern 330-G, its power from 1 to 40 m/s beside 250-B and 250-C, and a grid search for your site:
+
+```bash
+python3 tools/galloping_calc.py
+```
+
+```bash
+python3 tools/galloping_calc.py curve --compare
+```
+
+```bash
+python3 tools/galloping_calc.py sweep --site 6.0 --hubs 500,800 --csv grid.csv
+```
+
+Put your measured side-force coefficients in with `--A1` and `--A3`, and test turbulence sensitivity with `--turb_factor 0.8`.

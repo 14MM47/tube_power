@@ -8,7 +8,7 @@ lock-on band. Power grows roughly with wind cubed, so the machine needs a
 throttle: the prism turns on its own axis (pitch) a few degrees to weaken
 the galloping, and turns 45 degrees (feathered) to stop it altogether.
 
-    python3 tools/galloping_calc.py                      # report for Lantern 250-G
+    python3 tools/galloping_calc.py                      # report for Lantern 330-G
     python3 tools/galloping_calc.py envelope              # every limit, 1-40 m/s
     python3 tools/galloping_calc.py curve --compare       # power 1-40 m/s, with the VIV designs
     python3 tools/galloping_calc.py sweep                 # best design that generates to 40 m/s
@@ -18,7 +18,7 @@ Model: quasi-steady galloping with a cubic side-force curve
 C_y = A1*alpha - A3*alpha^3 (Parkinson), harmonic balance for the hinged
 mode, Coulomb friction, and the same structural checks as
 tools/lantern_calc.py adapted to a flat-sided prism. See
-designs/lantern-250-g/physics.md. Only the square's coefficients are well
+designs/lantern-330-g/physics.md. Only the square's coefficients are well
 established; everything is an estimate until measured. Standard library only.
 """
 
@@ -78,12 +78,12 @@ PLATE_BETA = [(1.0, 0.0479), (1.2, 0.0627), (1.4, 0.0755), (1.6, 0.0862), (1.8, 
 
 @dataclass(frozen=True)
 class GDesign:
-    """Defaults are Lantern 250-G, the recommended galloping configuration."""
+    """Defaults are Lantern 330-G, the recommended galloping configuration."""
 
     # Geometry
-    D: float = 0.25  # prism face width (square section), m
+    D: float = 0.33  # prism face width (square section), m
     L: float = 1.00  # prism height (the 1 m limit), m
-    neck: float = 0.40  # hinge axis to bottom of prism, m
+    neck: float = 0.60  # hinge axis to bottom of prism, m
     section: str = "square"
 
     # Galloping and flow coefficients (see SECTIONS)
@@ -100,8 +100,8 @@ class GDesign:
     turb_factor: float = 1.0  # multiplier on A1 for site turbulence (1 = smooth-flow data)
 
     # Prism panels (see SHELLS)
-    shell_areal: float = 0.352  # kg/m^2
-    panel_cap: float = 12.0  # allowable panel bending moment, N m/m
+    shell_areal: float = 0.46  # kg/m^2
+    panel_cap: float = 20.0  # allowable panel bending moment, N m/m
     panel_oneway: int = 0  # 1 = panel spans one way between bulkheads (corrugated board)
     skin_t: float = 0.15e-3  # outer skin thickness at the prism base, m
     skin_allow: float = 40e6  # Pa
@@ -111,18 +111,18 @@ class GDesign:
     panel_cp: float = 2.0  # net pressure coefficient for panel bending
 
     # End plates: square, side = plate_ratio x D; 1.0 = plain end caps
-    plate_ratio: float = 1.6
+    plate_ratio: float = 2.0
     end_loss_D: float = 0.5  # span lost per bare end, in face widths (assumed)
     plate_full_ratio: float = 2.0  # plate ratio that removes the end loss (assumed)
     gust_CL: float = 1.1  # end-plate lift coefficient in a gust
 
     # Neck, hub and pitch drive
     spider_mass: float = 0.02  # kg
-    neck_od: float = 0.040  # m
-    neck_id: float = 0.037  # m
+    neck_od: float = 0.050  # m
+    neck_id: float = 0.047  # m
     carbon_density: float = 1550.0  # kg/m^3
     carbon_E: float = 100e9  # Pa
-    hub_mass: float = 0.45  # hub, axle, spring carriage, belt arc, kg
+    hub_mass: float = 0.57  # hub, axle, spring carriage, belt arc, kg
     pitch_mass: float = 0.30  # pitch bearings, gearmotor, return spring and clutch, kg
     hub_radius: float = 0.07  # m
     CM_pitch: float = 0.10  # aerodynamic moment coefficient about the prism axis (assumed)
@@ -147,15 +147,15 @@ class GDesign:
 
     # Losses
     zeta_struct: float = 0.003
-    bush_span: float = 0.25  # distance between the two hinge bearings, m
-    axle_d: float = 0.020  # m
+    bush_span: float = 0.30  # distance between the two hinge bearings, m
+    axle_d: float = 0.025  # m
     bush_mu: float = 0.005  # deep-groove ball bearings (rolling friction referred to the axle)
     hinge_drag: float = 0.05  # bearing seal drag, both bearings, N m
 
     # Springs: two opposing springs on a carriage below the hinge
     r_spring_min: float = 0.015  # m
     r_spring_max: float = 0.140  # m
-    f_spring_top: float = 3.0  # swing frequency with the carriage furthest out, Hz
+    f_spring_top: float = 4.0  # swing frequency with the carriage furthest out, Hz
     swing_stop_deg: float = 20.0  # rubber end stops, deg
     swing_design_deg: float = 15.0  # swing plus static lean allowed in operation, deg
     spring_force_max: float = 1500.0  # per-spring force limit, N
@@ -171,7 +171,7 @@ class GDesign:
     U_storm: float = 45.0  # survival requirement, feathered and braked, m/s
     neck_allow: float = 400e6
     neck_fatigue_allow: float = 200e6
-    M_hinge_max: float = 500.0  # N m
+    M_hinge_max: float = 800.0  # N m
     V_max: float = 60.0  # electronics voltage rating, V
     mode_margin: float = 1.5
     max_total_height: float = 2.0
@@ -1063,7 +1063,7 @@ def evaluate(args_tuple) -> dict:
     """Build and score one grid point (top-level so multiprocessing can call it)."""
     base, D, nk, pr, sh, t, ft, gen, hub, site, neck_auto, hold = args_tuple
     d = replace(base, D=D, neck=nk, plate_ratio=pr, pulley_teeth=t, f_spring_top=ft, gen=gen,
-                M_hinge_max=hub, hub_mass=base.hub_mass * (hub / 500.0) ** 0.5,
+                M_hinge_max=hub, hub_mass=0.45 * (hub / 500.0) ** 0.5,
                 **SHELLS[sh], **GENERATORS[gen])
     if neck_auto:
         d = size_neck(d)

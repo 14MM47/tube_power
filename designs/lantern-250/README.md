@@ -11,6 +11,7 @@ Related documents:
 - [build-and-test.md](build-and-test.md): build order, test plan, safety
 - [calculator-output/](calculator-output/): saved reports, wind envelopes (1–40 m/s) and optimisation runs
 - [../../docs/design-history.md](../../docs/design-history.md): the designs that led here
+- [../lantern-330-g/](../lantern-330-g/): the galloping version, which keeps generating to 40 m/s
 - [../../research/](../../research/): the research this rests on
 
 ---
@@ -427,11 +428,11 @@ As designed, annual energy rises slowly above a 4.5 m/s site mean because output
 
 | Idea | Why not (for now) |
 |---|---|
-| Galloping cross-section (triangle, D-section) | No tuning needed and power keeps rising with wind. Quasi-steady theory gives ceilings of about 25% (triangle) and 54% (D-section), but measured magnet-and-coil galloping efficiency is very low (0.045% in one wind-tunnel test) and it needs storm parking. Worth a later experiment |
+| Galloping cross-section | Designed in full as [Lantern 330-G](../lantern-330-g/): a pitch-regulated square prism that generates from 2.5 to 40 m/s, but captures at most ~4% of the wind passing it. The higher ceilings once quoted for a triangle (~25%) and a D-section (~54%) need flow angles far beyond where their curve fits can be trusted. Capped at a trusted angle, the triangle (unverified coefficients) would add about 25% to 330-G's energy, and the D-section would not gallop at all. Measured magnet-and-coil galloping efficiency has been very low (0.045% in one wind-tunnel test) |
 | Roughness strips on the round tube | Gave Michigan's 28% in water and extends output above the tuned band. A cheap second-stage experiment; needs wider stops and the brake |
 | Flapping wing with pitch control | A two-wing water prototype measured 40%. A 1 m wing sweeping ±0.5 m could give ~16 W at 4.5 m/s, but it isn't a tube |
 | Generating above 8 m/s by default | The keep-generating option does this within every limit, to ~11 m/s, but in untested flow. It stays an option until the rig proves it |
-| Generating above ~12 m/s | The generator's heat limit, the neck's bending mode and the drag crisis all stop a VIV tube there. Strong winds need a mechanism whose output keeps rising with wind (galloping section) or a rotor |
+| Generating above ~12 m/s | The generator's heat limit, the neck's bending mode and the drag crisis all stop a VIV tube there. [Lantern 330-G](../lantern-330-g/) does it by galloping instead |
 | Locking the hinge in storms | The locked neck resonates with vortices at ~13 m/s. Brake on the springs instead |
 | Two swing axes, no vane | Needs a second belt and generator; one axis is simpler and matches the published tests |
 | Slim stiff masts (PVC, carbon, 40 mm) | High mass ratio; 0.02–0.35 W ([design history](../../docs/design-history.md)) |
