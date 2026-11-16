@@ -32,6 +32,7 @@ For scale, a 100 W solar panel gives roughly 90–150 kWh a year. This is a phys
 | [designs/lantern-250/physics.md](designs/lantern-250/physics.md) | Every model and equation used, with confidence levels and references |
 | [designs/lantern-250/build-and-test.md](designs/lantern-250/build-and-test.md) | Parts list, build order, bench and outdoor tests, safety |
 | [designs/lantern-250/calculator-output/](designs/lantern-250/calculator-output/) | Saved calculator reports and optimisation sweeps |
+| [designs/lantern-250/calculator-output/grid/](designs/lantern-250/calculator-output/grid/) | Full optimisation grids as CSV: 51,591 design points, passing and failing, 35 columns each |
 | [docs/design-history.md](docs/design-history.md) | Earlier designs (tuned mast with mechanical rectifier, 40 mm PVC, 40 mm carbon, contactless generators) and what each taught |
 | [research/](research/) | Research report and notes on bladeless turbines, DIY builds, patents and academic work |
 | [tools/lantern_calc.py](tools/lantern_calc.py) | Design calculator and grid-search optimiser (Python 3, standard library only) |
@@ -66,6 +67,12 @@ Rank by yearly energy for your site's mean wind speed instead:
 
 ```bash
 python3 tools/lantern_calc.py sweep --objective annual --site 4.0
+```
+
+Save every grid point, passing or not, to a CSV file:
+
+```bash
+python3 tools/lantern_calc.py sweep --csv grid.csv
 ```
 
 The optimiser pushes to whatever edge the model rewards. The diameter is capped by the Reynolds-number range covered by the evidence, and the neck by the hinge's storm-moment limit. Read [section 12 of the specification](designs/lantern-250/README.md#12-optimisation-results) before trusting a sweep result.

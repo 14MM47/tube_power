@@ -9,6 +9,7 @@ and can search a grid of dimensions for the highest-output design.
     python3 tools/lantern_calc.py report --D 0.2   # report for a 200 mm tube
     python3 tools/lantern_calc.py sweep            # grid search, ranked by power
     python3 tools/lantern_calc.py sweep --objective annual --site 4.5
+    python3 tools/lantern_calc.py sweep --csv grid.csv   # also save every grid point
 
 All results are engineering estimates from simple models (see
 designs/lantern-250/physics.md). None of them has been measured, and an
@@ -486,18 +487,23 @@ def sweep(base: Design, args: argparse.Namespace) -> str:
         return evaluate(d, args.wind)["p_elec"]
 
     results = []
+    rows: list[dict] = []
     rejected: dict[str, int] = {}
     total = 0
     for D, nk, dr, sh, t in itertools.product(Ds, necks, discs, shells, teeth):
         total += 1
         d = replace(base, D=D, neck=nk, disc_ratio=dr, shell_areal=SHELLS[sh], pulley_teeth=t)
         fails = constraint_failures(d)
+        for f in fails:
+            rejected[f] = rejected.get(f, 0) + 1
+        if args.csv:
+            rows.append(grid_row(d, sh, fails, args.site))
         if fails:
-            for f in fails:
-                rejected[f] = rejected.get(f, 0) + 1
             continue
         results.append((score(d), d, sh))
     results.sort(key=lambda r: r[0], reverse=True)
+    if args.csv:
+        write_grid_csv(args.csv, rows, args.objective)
 
     unit = "kWh/yr" if args.objective == "annual" else "W"
     what = (
@@ -551,6 +557,77 @@ def sweep(base: Design, args: argparse.Namespace) -> str:
     return "\n".join(o)
 
 
+GRID_COLUMNS = [
+    "rank", "passes", "failed_limits",
+    "D_mm", "neck_mm", "disc_ratio", "disc_dia_mm", "shell", "shell_kg_m2",
+    "pulley_teeth", "gear_ratio", "total_height_m",
+    "p_elec_4p5_W", "p_elec_low_4p5_W", "p_mech_4p5_W", "eta_mech_4p5",
+    "annual_kWh", "annual_low_kWh", "site_mean_wind",
+    "mass_ratio", "inertia_total_kgm2", "swinging_mass_kg", "swing_deg_4p5",
+    "top_swing_mm_4p5", "peak_torque_4p5_Nm", "top_accel_4p5_g", "parasitic_zeta_4p5",
+    "spring_rate_N_mm", "circuit_R_4p5_ohm", "copper_eff_4p5", "emf_peak_4p5_V",
+    "gen_peak_rpm_4p5", "Re_at_Umax", "storm_hinge_moment_Nm", "skin_stress_MPa",
+]
+
+
+def grid_row(d: Design, shell: str, fails: list[str], site: float) -> dict:
+    e = evaluate(d, 4.5)
+    s = structure(d)
+    I = inertias(d)
+    annual = annual_energy(d, site, n=24)
+    return {
+        "passes": "yes" if not fails else "no",
+        "failed_limits": "; ".join(fails),
+        "D_mm": round(d.D * 1000),
+        "neck_mm": round(d.neck * 1000),
+        "disc_ratio": round(d.disc_ratio, 2),
+        "disc_dia_mm": round(d.disc_ratio * d.D * 1000) if d.disc_ratio > 1.0 else 0,
+        "shell": shell,
+        "shell_kg_m2": d.shell_areal,
+        "pulley_teeth": d.pulley_teeth,
+        "gear_ratio": round(gear_ratio(d), 2),
+        "total_height_m": round(d.neck + d.L, 3),
+        "p_elec_4p5_W": round(e["p_elec"], 4),
+        "p_elec_low_4p5_W": round(d.derate * e["p_elec"], 4),
+        "p_mech_4p5_W": round(e["p_mech"], 4),
+        "eta_mech_4p5": round(e["eta_mech"], 4),
+        "annual_kWh": round(annual, 3),
+        "annual_low_kWh": round(d.derate * annual, 3),
+        "site_mean_wind": site,
+        "mass_ratio": round(I["mass_ratio"], 3),
+        "inertia_total_kgm2": round(I["total"], 4),
+        "swinging_mass_kg": round(masses(d)["swinging"], 3),
+        "swing_deg_4p5": round(e["theta_deg"], 2),
+        "top_swing_mm_4p5": round(e["a_top"] * 1000, 1),
+        "peak_torque_4p5_Nm": round(e["torque_peak"], 3),
+        "top_accel_4p5_g": round(e["top_accel_g"], 2),
+        "parasitic_zeta_4p5": round(e["zeta_par"], 5),
+        "spring_rate_N_mm": round(spring_rate(d) / 1000, 2),
+        "circuit_R_4p5_ohm": round(e["R_total"], 1),
+        "copper_eff_4p5": round(e["copper"], 3),
+        "emf_peak_4p5_V": round(e["emf_peak"], 1),
+        "gen_peak_rpm_4p5": round(e["gen_rpm_peak"]),
+        "Re_at_Umax": round(d.U_tune_max * d.D / NU),
+        "storm_hinge_moment_Nm": round(s["m_hinge"], 1),
+        "skin_stress_MPa": round(s["skin_stress"] / 1e6, 2),
+    }
+
+
+def write_grid_csv(path: str, rows: list[dict], objective: str) -> None:
+    """Write every grid point, in grid order, with a rank for passing designs."""
+    import csv
+
+    key = "annual_kWh" if objective == "annual" else "p_elec_4p5_W"
+    passing = sorted((r for r in rows if r["passes"] == "yes"), key=lambda r: r[key], reverse=True)
+    for i, r in enumerate(passing, 1):
+        r["rank"] = i
+    with open(path, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=GRID_COLUMNS)
+        w.writeheader()
+        for r in rows:
+            w.writerow({c: r.get(c, "") for c in GRID_COLUMNS})
+
+
 def add_design_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--config", choices=sorted(CONFIGS), default="B",
                    help="named starting configuration (default B)")
@@ -589,6 +666,8 @@ def main() -> None:
     ps.add_argument("--shells", default=",".join(SHELLS))
     ps.add_argument("--teeth", default="12,16,20,24,30,36")
     ps.add_argument("--top", type=int, default=15)
+    ps.add_argument("--csv", default=None,
+                    help="also write every grid point (passing or not) to this CSV file")
     args = p.parse_args()
     d = design_from(args) if args.cmd else Design()
     if args.cmd == "sweep":

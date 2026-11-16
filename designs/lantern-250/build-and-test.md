@@ -107,6 +107,10 @@ python3 tools/lantern_calc.py sweep --objective annual --site 4.0   # ranked by 
 python3 tools/lantern_calc.py sweep --Re_max 2e5 --M_hinge_max 250  # explore beyond the tested range
 ```
 
+```bash
+python3 tools/lantern_calc.py sweep --csv grid.csv                  # save every grid point to CSV
+```
+
 Every design field can be overridden with `--name value`. Run `--help` on either command to list them.
 
 ## 6. Safety

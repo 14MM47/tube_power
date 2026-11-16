@@ -284,19 +284,25 @@ Tube swing at 4.5 m/s: ±92 mm at the bottom, ±150 mm mid-height, ±207 mm at t
 - Total height ≤ 2 m
 - Generator strong enough to provide the optimum damping
 
-**Best design:** 250 mm diameter, 800 mm neck, discs 2.0 × diameter, lightest shell, 10-tooth pulley: 2.08 W at 4.5 m/s. Configuration B uses the 3 mm shell (−1%, more robust) and a 12-tooth pulley (−2%, a common part).
+**Best design:** 250 mm diameter, 800 mm neck, discs 2.0 × diameter, lightest shell, 10-tooth pulley: 2.11 W at 4.5 m/s. Configuration B uses the 3 mm shell (−1%, more robust) and a 12-tooth pulley (−2%, a common part).
 
 **What limits each variable** (changing one at a time from the best design):
 
 | Variable | Effect | What stops it |
 |---|---|---|
 | Diameter | +4% per 10 mm | The Reynolds limit at 250 mm. With the limit relaxed to 200,000 and a stronger hinge, the model keeps climbing to 3.35 W at 400 mm ([sweep-relaxed-limits.md](calculator-output/sweep-relaxed-limits.md)) |
-| Neck length | 0 mm −46%, 400 mm −14%, 600 mm −6% | The 150 N·m storm limit at 800 mm |
+| Neck length | 0 mm −46%, 400 mm −14%, 600 mm −5% | The 150 N·m storm limit at 800 mm |
 | End discs | none −22%, 1.6 × −9% | Flat beyond 2.0 ×. **This follows directly from the assumed end-loss model (no loss at 2.0 ×) and must be tested.** |
 | Pulley teeth | 16 teeth −8%, 20 −18% | 10 teeth is the smallest practical GT2 pulley. More gearing raises copper efficiency but adds reflected inertia and friction |
 | Shell | 2, 3, 5 mm foam within 3% | Robustness, not power |
 
-**How far to trust it.** The optimiser always pushes to whichever edge the model rewards. The diameter and neck results follow from well-understood physics (more wind, more even swing). The disc result is only as good as the end-loss assumption. Ranking by annual energy instead of power at 4.5 m/s gives the same winner (11.0 kWh/yr at a 4.5 m/s site).
+**How far to trust it.** The optimiser always pushes to whichever edge the model rewards. The diameter and neck results follow from well-understood physics (more wind, more even swing). The disc result is only as good as the end-loss assumption. Ranking by annual energy instead of power at 4.5 m/s gives the same winner (11.2 kWh/yr at a 4.5 m/s site).
+
+**Full grids.** Every combination evaluated, including those that fail a limit and the reason, is in [calculator-output/grid/](calculator-output/grid/):
+- `grid-wide.csv`: 20,736 rows covering D 100–400 mm.
+- `grid-fine.csv`: 30,855 rows covering D 200–300 mm in 10 mm steps.
+
+Each row has 35 columns: power, annual energy, mass ratio, swing, torque, generator values and structural checks. Column definitions are in the folder's README.
 
 ---
 
