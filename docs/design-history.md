@@ -1,0 +1,102 @@
+# Design history: from a bladeless mast to Lantern 250
+
+This records how the design evolved, step by step, and what each step taught. The earlier designs' figures come from hand calculations made in conversation with an earlier version of the same models. Treat them as estimates, as for everything else here.
+
+## 0. Starting question: can you buy a small domestic bladeless turbine?
+
+No, as of November 2026.
+- Vortex Bladeless's 1 m Nano (~3 W) and 2.75 m Tacoma (~100 W) remain prototypes. Earlier promised sale dates passed.
+- Aeromine is rooftop-commercial only (50 kW-plus installations).
+- Katrick, Halcium and O-Wind are in development. SheerWind INVELOX went bankrupt in 2018.
+- Marketplace "bladeless vortex" turbines are mostly ordinary vertical-axis turbines with blades.
+
+The research on building one is in [../research/](../research/). Its headline finding: every documented home or student bladeless build produced microwatts to ~50 mW. None reached 1 W.
+
+## 1. Tuned mast with a mechanical rectifier (250 mm × 1.5 m)
+
+**Idea (from the brief):** a mast pivoted near its base, with a lower lever feeding a mechanical coupling that turns X/Y wobble into rotation of one generator.
+
+**Design:**
+- Ø250 mm × 1.5 m mast, ≤1 kg, tuned to 3.6 Hz at 4.5 m/s, swinging about ±4.8°.
+- Joystick-style X/Y yokes feed two one-way-clutch rectifiers on a shared belt to one coreless generator, at about 50–100:1.
+- Estimate: ~0.5–2 W electrical while locked on.
+
+**Lessons:**
+- A lever below the pivot trades force for stroke. It doesn't add energy.
+- Match the generator's **resistance** (damping), not the stroke. Best damping ratio is ~0.02–0.05. Fixed-stroke cranks and cams don't work: they can't start from a small swing and they have dead centres.
+- **Gearing rules** for G, the ratio from hinge to generator:
+  - damping seen by the mast ∝ G²
+  - friction seen by the mast ∝ G
+  - reflected inertia ∝ G²
+  - voltage ∝ G
+- No flywheel. Use a soft start. Ball bearings at small rocking angles get damaged (false brinelling). Expect about 10⁸ cycles a year.
+- One generator can only resist one axis at a time. So use **a single swing axis aligned by a tail vane**, or two generators.
+
+## 2. 40 mm PVC pipe
+
+**Design:** cheap 40 mm PVC pipe as the mast.
+
+**Findings:**
+- Vortices shed at f = 5 × U Hz, so 15–30 Hz.
+- Mass ratio ≈ 217, so the optimum generator damping ratio (~0.0008) is below almost any mechanism's friction.
+- PVC is floppy. Its own bending frequency is ~11/a² Hz for arm length a, which caps each arm at ~0.3 m.
+- Best bare design: centre pivot, 0.6 m, **0.02–0.08 W** mechanical at 4.5 m/s. A clutch rectifier would use more power than it delivers.
+
+**Fix:** slide on 25 mm-wall foam pipe insulation (Ø92 mm). Mass ratio falls to ~61. 1.0 m, centre pivot, **0.15–0.35 W** mechanical at 4.5 m/s. Capstan drive at 30:1 to a coreless generator.
+
+**Lessons:**
+- Mass ratio decides everything in air.
+- A centre pivot puts two arms in the wind and balances the inertial loads.
+- Pipe stiffness limits arm length.
+
+## 3. 40 mm carbon tube (best material for a fixed 40 mm diameter)
+
+**Design:** 40 × 39 mm thin-wall carbon tube, 1.67 m, centre pivot, cross-spring flexure hinge, die-spring tuning (16.7 mm of carriage per m/s), 40:1 capstan drive.
+
+**Result:** ~0.26 W mechanical / ~0.2 W electrical at 4.5 m/s.
+
+**Lessons:**
+- For a thin tube, bending frequency depends only on stiffness-to-weight (E/ρ) and radius, not on wall thickness. So pick the stiffest-per-weight material, then the thinnest wall that survives.
+- **Capture efficiency ≈ 16% / (1 + 1.07 m* ζ_p)^5.7**, where ζ_p is the damping ratio from friction and losses. Halving the mass ratio roughly doubles the output when friction is realistic.
+
+## 4. Mechanical coupling vs contactless generators (40 mm carbon mast)
+
+| Method | Electrical at 4.5 m/s |
+|---|---|
+| Loudspeaker-motor voice coil at the hinge (contactless) | 0.30–0.37 W |
+| Capstan and rotary generator | 0.20 W |
+| One-way-clutch rectifier | ~0.10 W |
+| Piezo, triboelectric, electret | milliwatts |
+
+**Lesson:** high frequency with small force favours a direct magnet-and-coil generator. Low frequency with large force favours gearing. Vortex itself moved from piezo (2010 patent) to magnets and coils (2016).
+
+## 5. First principles: Lantern 250
+
+**Brief:** only the 1 m tube height fixed; everything else open.
+
+**Reasoning:**
+- Only diameter adds wind.
+- A fat, ultralight tube gets the mass ratio down to ~4. That makes friction cheap and tuning forgiving.
+- Reynolds number (≤120,000, the tested range) caps the diameter at ~250 mm.
+- End discs, a neck below the tube, one vane-aligned axis, and belt gearing (low frequency, high torque) follow from there.
+
+**Configuration A** (as first worked out): 400 mm neck, Ø400 mm discs, 19.6:1. **1.6 W** electrical at 4.5 m/s, model central case.
+
+**Then:**
+- **Structural corrections:** glass-skinned shell; single carbon-tube neck instead of thin rods; stronger hinge.
+- **Calculator and grid search** over 31,000 combinations. The optimum hits the Reynolds limit for diameter and the storm-moment limit for neck length.
+
+**Configuration B** (recommended): 800 mm neck, Ø500 mm discs, 26:1. **2.05 W** electrical at 4.5 m/s, central case.
+
+See [../designs/lantern-250/](../designs/lantern-250/).
+
+## Progression in one table
+
+| Design | Mass ratio | Electrical at 4.5 m/s (central) |
+|---|---|---|
+| 40 mm PVC, bare | ~217 | ~0.01–0.06 W |
+| 40 mm PVC + foam sleeve | ~61 | ~0.1–0.25 W |
+| 40 mm carbon, capstan | ~69 | ~0.2 W |
+| 40 mm carbon, voice coil | ~69 | ~0.3–0.37 W |
+| Lantern 250-A | 3.8 | 1.6 W |
+| **Lantern 250-B** | **4.3** | **2.05 W** |
