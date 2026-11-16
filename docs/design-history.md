@@ -86,9 +86,31 @@ The research on building one is in [../research/](../research/). Its headline fi
 - **Structural corrections:** glass-skinned shell; single carbon-tube neck instead of thin rods; stronger hinge.
 - **Calculator and grid search** over 31,000 combinations. The optimum hits the Reynolds limit for diameter and the storm-moment limit for neck length.
 
-**Configuration B** (recommended): 800 mm neck, Ø500 mm discs, 26:1. **2.05 W** electrical at 4.5 m/s, central case.
+**Configuration B** (recommended): 800 mm neck, Ø500 mm discs, 26:1. **2.05 W** electrical at 4.5 m/s, central case, at that stage (single-skin shell).
 
 See [../designs/lantern-250/](../designs/lantern-250/).
+
+## 6. Handling 2 m/s to 40 m/s: operating modes and configuration C
+
+**Brief:** handle every wind speed from about 2 m/s up to 40 m/s.
+
+**What changed:**
+- **The calculator now checks every wind speed from calm to 40 m/s.** It picks the operating mode at each speed:
+  - idle,
+  - tracking (2–7 m/s),
+  - power-capped (7–8 m/s),
+  - braked (8 m/s and above).
+- **At each speed it checks every part:** neck (peak and fatigue), skin, shell-wall ovalling, end-disc gust lift, hub, voltage and generator heat. It also reports cut-in and survival wind speeds.
+- **The new wall and disc checks exposed a weakness.** A shell with an outer glass skin only would survive just ~15 m/s. B now has glass on both faces, survives 25 m/s, and gives 2.01 W at 4.5 m/s, down from 2.05 W.
+- **Capping above 7 m/s by over-loading the generator heats its windings,** so the brake comes in at 8 m/s.
+- **A kick-start was added:** the controller briefly drives the motor to start the swing. It brings cut-in down from ~2.1 to ~1.6 m/s.
+- **The earlier claim that the tube drops out of lock-on and protects itself was withdrawn.** At a low mass ratio the lock-on band is wide, so protection comes from a fail-safe brake.
+- **Configuration C was found by a grid search requiring 40 m/s survival:**
+  - 5 mm sandwich shell with a thickened outer skin near the base,
+  - 600 mm × 35 × 32 mm carbon neck,
+  - hub built for 350 N·m.
+
+  It gives **1.84 W** at 4.5 m/s, about 9% less than B, and survives to about 42 m/s.
 
 ## Progression in one table
 
@@ -98,5 +120,6 @@ See [../designs/lantern-250/](../designs/lantern-250/).
 | 40 mm PVC + foam sleeve | ~61 | ~0.1–0.25 W |
 | 40 mm carbon, capstan | ~69 | ~0.2 W |
 | 40 mm carbon, voice coil | ~69 | ~0.3–0.37 W |
-| Lantern 250-A | 3.8 | 1.6 W |
-| **Lantern 250-B** | **4.3** | **2.05 W** |
+| Lantern 250-A (with all later corrections) | 4.7 | 1.57 W |
+| **Lantern 250-B** (survives 25 m/s) | **5.3** | **2.01 W** |
+| **Lantern 250-C** (survives 40 m/s) | **7.7** | **1.84 W** |
