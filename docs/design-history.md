@@ -160,6 +160,38 @@ At every wind speed the controller chooses three things, within every limit:
 - Yearly energy beats 250-B as designed above about a 5 m/s site mean, and 250-B kept generating above about 7 m/s.
 - The biggest unknown is turbulence: 20% off A1 costs 40% of the energy. So the first build step is a static side-force test.
 
+## 9. The most power from 15 to 40 m/s: Lantern 330-GH
+
+**Brief:** why the pitch regulation? Design for the maximum possible power between 15 and 40 m/s.
+
+**Why 330-G pitched.** Only to hold its 20 W rating. That was a choice made because yearly energy at ordinary sites hardly depends on it, not a physical limit. At 40 m/s the prism could supply about 270 W through 330-G's small generator. Pitch only ever throws galloping power away, so it is worth having only where a part would otherwise go past its limit.
+
+**What runs out first without the cap:**
+- the generator (it can't absorb the load without overheating);
+- the belt (~130 N·m at the hinge);
+- the springs (force rises with the square of frequency).
+
+The calculator gained a belt-tension check, larger generator presets, heavier necks, and sweep options for drive, swing and spring force.
+
+**Search.** 5,184 designs, ranked by average power from 15 to 40 m/s. Best average by generator:
+
+| Generator | Best average |
+|---|---|
+| 8108 outrunner | 68 W |
+| 6374 outrunner | 117 W |
+| Direct-drive e-bike hub motor | 152 W |
+
+The other choices that mattered:
+- springs 3 kN instead of 1.5 kN: +19%;
+- 330 mm prism instead of 300 mm: +10%;
+- 1,200 N·m hub with an 800 mm neck: +5%;
+- swing ±20–25° instead of ±15°: +4%.
+
+**Result: Lantern 330-GH.**
+- **Drive:** hub motor, HTD 8M belt on a 275 mm arc (9.8:1), ±25° swing, 3 kN springs, 800 mm neck, 1,200 N·m hub.
+- **Output:** no part reaches its limit below 40 m/s, so the prism stays face-on and the pitch drive becomes a two-position feather. Average **152 W from 15 to 40 m/s**, **384 W at 40 m/s**, about 3% of the wind passing the prism. That is essentially all this prism's galloping can give after losses.
+- **Cost:** a 6.1 m/s cut-in, set by the hub motor's drag. It makes more energy over a year than 330-G only above about an 8 m/s site mean. A 6374 outrunner is the middle option (117 W average, 3.6 m/s cut-in).
+
 ## Progression in one table
 
 | Design | Mass ratio | Electrical at 4.5 m/s (central) |
@@ -172,3 +204,4 @@ At every wind speed the controller chooses three things, within every limit:
 | **Lantern 250-B** (survives 25 m/s) | **5.5** | **2.00 W** |
 | **Lantern 250-C** (survives 40 m/s) | **7.7** | **1.84 W** |
 | **Lantern 330-G** (galloping; generates to 40 m/s, 20 W from 15.5 m/s) | **10** | **0.40 W** |
+| **Lantern 330-GH** (galloping; average 152 W from 15 to 40 m/s, 384 W at 40 m/s) | **12** | below cut-in (6.1 m/s) |

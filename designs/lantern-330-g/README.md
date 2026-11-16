@@ -6,6 +6,10 @@ A square section gallops: once it moves sideways, the wind it sees comes from th
 
 The name follows the family: the number is the cross-section width in millimetres, and G is for galloping.
 
+**Two versions share the prism:**
+- **330-G** is rated 20 W and pitch-regulated. It gives the most yearly energy at ordinary sites.
+- **330-GH** is built for the most power from 15 to 40 m/s ([section 11](#11-lantern-330-gh-the-most-power-from-15-to-40-ms)). It has no power cap and no pitch regulation: an e-bike hub motor on a heavy belt, a ±25° swing and heavier springs. It averages 152 W from 15 to 40 m/s and reaches 384 W at 40 m/s, but only starts at about 6 m/s.
+
 > **Status: concept design, not built or tested.** Every number is an engineering estimate from the models in [physics.md](physics.md), reproduced by [`tools/galloping_calc.py`](../../tools/galloping_calc.py). Only the square's galloping coefficients are well established, and they come from smooth wind-tunnel flow. **Build the static side-force test in [build-and-test.md](build-and-test.md) first.**
 
 Related documents:
@@ -18,20 +22,21 @@ Related documents:
 
 ## 1. Summary
 
-| | **330-G (galloping)** | 250-B (vortex shedding) | 250-C (vortex shedding, all-weather) |
-|---|---|---|---|
-| Body | 330 × 330 mm square prism, 1,000 mm tall; 10 mm glass-faced foam panels; 660 mm square end plates | Ø250 × 1,000 mm tube, 3 mm sandwich, Ø500 mm discs | Ø250 × 1,000 mm, 5 mm storm shell, Ø500 mm discs |
-| Neck, hub | 600 mm, 50 × 47 mm carbon; pitch drive at the neck foot; hub built for 800 N·m on ball bearings | 800 mm, 35 × 32 mm; hub 150 N·m | 600 mm, 35 × 32 mm; hub 350 N·m |
-| Swinging mass / mass ratio | 2.2 kg / 10 | 0.63 kg / 5.5 | 0.86 kg / 7.7 |
-| Generator | 8108-size pancake outrunner (~100 W class), 26:1 belt | 5208 gimbal motor, 26:1 | same |
-| **Generates** | **2.5–40 m/s without a gap** | 1.6–8 m/s as designed; 1.8–10.8 m/s kept generating | 1.6–8 m/s; 1.8–11 m/s kept generating |
-| Electrical at 4.5 m/s | 0.40 W | 2.0 W | 1.8 W |
-| Electrical at 10 m/s | 5.5 W | 20.5 W (kept generating) | 20.0 W (kept generating) |
-| Electrical at 15–40 m/s | 18 W at 15 m/s, then **20 W held to 40 m/s** | nothing (braked) | nothing (braked) |
-| Survives | 46.7 m/s feathered and braked | 25 m/s | 42 m/s |
-| Yearly energy, 4.5 m/s-mean site | **6.2 kWh** (low case 3.1) | 9.1 as designed; 14.7 kept generating | 8.5; 14.0 |
-| Yearly energy, 6.5 m/s-mean site | **19.0 kWh** (low case 9.5) | 9.5; 24.3 | 8.9; 24.1 |
-| Yearly energy, 7.5 m/s-mean site | **27.8 kWh** | 8.6; 25.3 | 8.1; 25.5 |
+| | **330-G (galloping, rated 20 W)** | **330-GH (galloping, most power 15–40 m/s)** | 250-B (vortex shedding) | 250-C (vortex shedding, all-weather) |
+|---|---|---|---|---|
+| Body | 330 × 330 mm square prism, 1,000 mm tall; 10 mm glass-faced foam panels; 660 mm square end plates | same prism | Ø250 × 1,000 mm tube, 3 mm sandwich, Ø500 mm discs | Ø250 × 1,000 mm, 5 mm storm shell, Ø500 mm discs |
+| Neck, hub | 600 mm, 50 × 47 mm carbon; pitch drive at the neck foot; hub built for 800 N·m on ball bearings | 800 mm, 50 × 47 mm; two-position feather (face-on or 45°); hub 1,200 N·m | 800 mm, 35 × 32 mm; hub 150 N·m | 600 mm, 35 × 32 mm; hub 350 N·m |
+| Swinging mass / mass ratio | 2.2 kg / 10 | 2.4 kg / 12 | 0.63 kg / 5.5 | 0.86 kg / 7.7 |
+| Generator and drive | 8108-size pancake outrunner (~100 W class), GT2 9 mm belt, 26:1; swing ±15° | Direct-drive e-bike hub motor (~500 W class), HTD 8M 20 mm belt, 9.8:1; swing ±25°; 3 kN springs | 5208 gimbal motor, 26:1 | same |
+| **Generates** | **2.5–40 m/s without a gap** | **6.1–40 m/s without a gap** | 1.6–8 m/s as designed; 1.8–10.8 m/s kept generating | 1.6–8 m/s; 1.8–11 m/s kept generating |
+| Electrical at 4.5 m/s | 0.40 W | 0 (below cut-in) | 2.0 W | 1.8 W |
+| Electrical at 10 m/s | 5.5 W | 4.1 W | 20.5 W (kept generating) | 20.0 W (kept generating) |
+| Electrical at 15–40 m/s | 18 W at 15 m/s, then **20 W held to 40 m/s** | 18 W at 15, 47 at 20, 93 at 25, 163 at 30, **384 W at 40 m/s**; **152 W average** | nothing (braked) | nothing (braked) |
+| Survives | 46.7 m/s feathered and braked | 46.7 m/s | 25 m/s | 42 m/s |
+| Yearly energy, 4.5 m/s-mean site | **6.2 kWh** (low case 3.1) | 2.6 | 9.1 as designed; 14.7 kept generating | 8.5; 14.0 |
+| Yearly energy, 6.5 m/s-mean site | **19.0 kWh** (low case 9.5) | 14.4 | 9.5; 24.3 | 8.9; 24.1 |
+| Yearly energy, 7.5 m/s-mean site | **27.8 kWh** | 25.2 | 8.6; 25.3 | 8.1; 25.5 |
+| Yearly energy, 9 m/s-mean site | 42.0 kWh | **48.9** | 7.2; 24.1 | — |
 
 **What this says, on the model's central figures:**
 
@@ -243,7 +248,102 @@ As with the vortex designs, the optimiser presses against the edges of the model
 
 ---
 
-## 11. Reproducing the numbers
+## 11. Lantern 330-GH: the most power from 15 to 40 m/s
+
+### Why 330-G pitches, and why 330-GH doesn't
+
+330-G's pitch regulation exists only to hold its **20 W rating**. That rating was a choice, not a limit. It was picked because yearly energy at ordinary sites hardly depends on it: winds above 15 m/s blow for about an hour a year at a 4.5 m/s site.
+
+At 40 m/s the same prism could deliver about 270 W through its small generator. 330-G throws away more than 90% of that so the 8108 motor and a 9 mm belt can stay small and cool.
+
+Pitch is only worth having where some part would otherwise go past its limit. So the high-wind design asks a different question: **which parts would stop the prism delivering all its galloping power, and what does it take to upgrade them?**
+
+The calculator answers it with the cap removed. In order, the parts that run out are:
+
+| Part | Why it runs out | Upgrade in 330-GH |
+|---|---|---|
+| Generator | The best load at 40 m/s is ~16 N·m·s/rad at the hinge. An 8108 motor would lose most of its power as heat at that load, and a 5208 cannot get near it. | Direct-drive e-bike hub motor (~500 W class): torque constant ~0.75 N·m/A, so it can absorb ~180 N·m·s/rad at a 9.8:1 ratio. It runs at 750 rpm, 59 V peak and 44 W of heat at 40 m/s |
+| Belt | Peak torque at the hinge reaches ~130 N·m; a 9 mm GT2 belt on a 100 mm arc would see ~1.3 kN | HTD 8M 20 mm belt on a 275 mm-radius arc: 475 N peak against ~1,100 N allowable |
+| Springs and stroke | Holding the swing to ±15° needs a high frequency at 40 m/s, and spring force rises as the square of frequency | ±25° design swing (stops at ±30°) and 3 kN springs (~51 N/mm, ±45 mm travel at full stiffness); the frequency stays at or below 2.9 Hz |
+| Hub and neck | A longer neck makes the prism move more evenly (capture ceiling 4.15% instead of 3.9%) but raises the storm moment | 800 mm neck, hub built for 1,200 N·m |
+
+**With those upgrades no limit is reached below 40 m/s.** The neck peaks at 88% of its allowable and the generator speed at 93%, both at 40 m/s. So the controller never needs pitch:
+- it loads the generator for maximum power;
+- it moves the spring carriage to hold the swing at ±25°;
+- the prism stays face-on.
+
+Continuous pitch control would add exactly nothing (the sweep checked: 152.4 W with or without it). **330-GH replaces the pitch drive with a two-position feather:** latched face-on, released by a spring to 45° above 40 m/s, on any fault or on loss of power.
+
+The feather still matters, for two reasons:
+- **A belt or wiring failure.** The shorted hub motor alone would stop the prism galloping in any wind (its damping is about five times what it takes at 45 m/s), but only while the belt and wiring are intact.
+- **Storm drag.** Feathered, the prism has 21% less drag, which the neck needs to survive 45 m/s.
+
+### What it produces
+
+From [calculator-output/report-330GH.md](calculator-output/report-330GH.md) and [envelope-330GH.md](calculator-output/envelope-330GH.md):
+
+| Wind (m/s) | Swing | Frequency | Electrical | Neck | Hub | Springs | Belt | Generator heat | Closest limit |
+|---|---|---|---|---|---|---|---|---|---|
+| 7 | ±25° | 0.45 Hz | 0.57 W | 3% | 2% | 15% | 1% | 0 W | flow angle 79% |
+| 10 | ±25° | 0.69 Hz | 4.1 W | 5% | 5% | 20% | 3% | 0.1 W | flow angle 85% |
+| 15 | ±25° | 1.07 Hz | 18.3 W | 12% | 10% | 29% | 6% | 0.7 W | flow angle 88% |
+| 20 | ±25° | 1.44 Hz | 46.7 W | 22% | 18% | 38% | 11% | 2.4 W | flow angle 89% |
+| 25 | ±25° | 1.81 Hz | 93.5 W | 34% | 29% | 47% | 17% | 6.3 W | flow angle 89% |
+| 30 | ±25° | 2.18 Hz | 163 W | 49% | 41% | 57% | 24% | 13.5 W | flow angle 90% |
+| 35 | ±25° | 2.54 Hz | 258 W | 67% | 56% | 66% | 33% | 25.5 W | flow angle 90% |
+| 40 | ±25° | 2.91 Hz | **384 W** | 88% | 74% | 75% | 43% | 44 W | generator speed 93% |
+| 45 | feathered | — | 0 | 82% | 73% | — | — | — | end plates 93% |
+
+The flow-angle line shows the galloping model working at its own optimum: the prism top meets the wind at about 21°, inside the range the side-force fit is trusted to.
+
+At every wind from 15 to 40 m/s, 330-GH delivers about 3% of the wind passing the prism as electricity. That is the square's frictionless galloping ceiling (4.15% with the 800 mm neck) less belt, copper and converter losses.
+
+**This is the most this prism can give.** More would need one of:
+- a wider prism (the assumed aspect-ratio limit of 3 already sets 330 mm);
+- a stronger side-force curve (the unverified triangle section could add ~25%);
+- more neck and hub, at a few per cent per step.
+
+### The price
+
+| | 330-G | 330-GH |
+|---|---|---|
+| Average output, 15–40 m/s | 19.9 W | **152 W** (7.7×) |
+| Output at 40 m/s | 20 W | **384 W** |
+| Cut-in | 2.5 m/s | 6.1 m/s (the hub motor's drag, ~2.4 N·m at the hinge) |
+| Output at 10 m/s | 5.5 W | 4.1 W |
+| Hours a year above 15 m/s (Rayleigh) | 1 at a 4.5 m/s site, 380 at 7.5, 990 at 9 | same |
+| Yearly energy, 4.5 / 7.5 / 9 m/s site | 6.2 / 27.8 / 42.0 kWh | 2.6 / 25.2 / **48.9** kWh |
+| Post base moment, 40–45 m/s | 3.0 kN·m | 3.2 kN·m |
+| Prism top swing | ±0.4 m | ±0.76 m (the top is 4.8 m up) |
+
+Winds above 25 m/s are storm events: about an hour a year even at a 7.5 m/s-mean site, and about 20 hours at 9 m/s.
+
+So 330-GH only makes **more energy over a year** than 330-G at very exposed sites, with a mean wind above about 8 m/s. Below that, the hub motor's drag costs more in the 3–8 m/s winds than the high-wind gain returns.
+
+A middle option, a 6374-size outrunner on an HTD 5M belt (`--generator 6374 --belt HTD5M-15 --arc_radius 0.25 --pulley_teeth 14`), averages 117 W from 15 to 40 m/s. It starts at 3.6 m/s and gives the most yearly energy of the three at sites with a 7.5–9 m/s mean (28.8 kWh at 7.5 m/s, 50.8 kWh at 9 m/s).
+
+### Search
+
+`sweep --objective high` ranked 5,184 designs by average electrical power from 15 to 40 m/s, every one with no power cap. Each had to:
+- generate without a gap to 40 m/s;
+- keep every part within its limits;
+- survive 45 m/s feathered.
+
+Results are in [calculator-output/sweep-high-wind.md](calculator-output/sweep-high-wind.md) and [grid/grid-high-wind.csv](calculator-output/grid/grid-high-wind.csv).
+
+| Choice | Best average, 15–40 m/s |
+|---|---|
+| 8108 outrunner / 6374 outrunner / hub motor | 68 / 117 / **152 W** |
+| Springs 1.5 kN / 3 kN | 128 / 152 W |
+| Swing ±15° / ±20° / ±25° | 146 / 152 / 152 W |
+| Hub 800 N·m (600 mm neck) / 1,200 N·m (800 mm neck) | 145 / 152 W |
+| Prism 300 / 330 mm | 139 / 152 W |
+
+The top design used a 300 mm arc (10.7:1) with continuous pitch, and reached its generator's speed limit just below 40 m/s. A 275 mm arc (9.8:1) gives the same average without ever pitching, so that is 330-GH.
+
+---
+
+## 12. Reproducing the numbers
 
 ```bash
 python3 tools/galloping_calc.py                                  # full report for 330-G
@@ -263,4 +363,12 @@ python3 tools/galloping_calc.py report --turb_factor 0.8         # turbulence se
 
 ```bash
 python3 tools/galloping_calc.py sweep --hubs 500,800 --csv grid.csv   # grid search (about 10 minutes on 4 cores)
+```
+
+```bash
+python3 tools/galloping_calc.py report --config GH               # 330-GH, the most power from 15 to 40 m/s
+```
+
+```bash
+python3 tools/galloping_calc.py curve --config GH --compare      # 330-GH power 1-40 m/s with 250-B and 250-C
 ```

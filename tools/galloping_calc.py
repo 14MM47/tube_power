@@ -187,6 +187,7 @@ class GDesign:
     P_rated: float = 20.0  # electrical power cap, W
     U_cut_out: float = 40.0  # feather above this wind, m/s
     pitch_step: float = 0.005  # controller search step, rad
+    pitch_control: int = 1  # 1 = pitch can throttle; 0 = two-position feather only (face-on or 45 deg)
     beta_feather: float = 0.785  # 45 deg
     kick_start: int = 1
 
@@ -208,7 +209,16 @@ class GDesign:
     avail: float = 0.8  # share of time the model output is achieved (yaw lag, gusts, restarts)
 
 
-CONFIGS = {"G": {}}
+CONFIGS = {
+    "G": {},
+    # Lantern 330-GH: most power from 15 to 40 m/s. No power cap and no pitch regulation:
+    # the prism is either face-on or feathered (45 deg)
+    "GH": dict(neck=0.80, P_rated=1e6, pitch_control=0, V_max=100.0, M_hinge_max=1200.0,
+               hub_mass=0.45 * (1200.0 / 500.0) ** 0.5,
+               gen="hub500", **GENERATORS["hub500"], belt="HTD8M-20", **BELTS["HTD8M-20"], arc_radius=0.275,
+               pulley_teeth=22, swing_design_deg=25.0, swing_stop_deg=30.0, spring_force_max=3000.0,
+               f_spring_top=4.0),
+}
 
 # ---------------------------------------------------------------- geometry
 
@@ -657,6 +667,8 @@ def operate(d: GDesign, U: float) -> dict:
     first_limit = ""
     cm = c_max(d) / d.R_margin
     n = int(math.sqrt(max(d.A1 * d.turb_factor, 0.0) / (3.0 * d.A3)) / d.pitch_step) + 1
+    if not d.pitch_control:
+        n = 0
     for i in range(n + 1):
         beta = i * d.pitch_step
         cx = context(d, U, beta)
@@ -939,7 +951,8 @@ def summary_lines(d: GDesign) -> list[str]:
         rating = (f"- No power cap. Mean electrical output from 15 to {d.U_cut_out:g} m/s **{f2(sum(pw)/len(pw),1)} W**; "
                   f"{f2(pw[0],1)} W at 15 m/s, {f2(pw[-1],1)} W at {d.U_cut_out:g} m/s. "
                   + (f"Pitch used from {pitched[0]} m/s to stay within limits" if pitched
-                     else "Pitch never needed below cut-out (only for feathering)"))
+                     else ("Pitch never needed below cut-out (only for feathering)" if d.pitch_control
+                           else "No pitch regulation: face-on to cut-out, then feathered")))
     return [
         f"- Cut-in (starts with kick-start and makes >10 mW): {f2(ci,1)} m/s; generates without a gap to "
         f"**{f2(gto,1)} m/s**; feathers above {d.U_cut_out:g} m/s",
@@ -1033,7 +1046,7 @@ def report(d: GDesign) -> str:
     a, b = aero_coeffs(d, 10.0, 0.0)
     eta_max = d.A1**2 * span_int(d, 2) ** 2 / (6 * d.A3 * span_int(d, 4) * d.L) * span_factor(d)
     o.append(
-        f"- Gear ratio {f2(G,1)}:1 ({d.arc_radius*1000:.0f} mm arc to {d.pulley_teeth}-tooth GT2 pulley); "
+        f"- Gear ratio {f2(G,1)}:1 ({d.arc_radius*1000:.0f} mm arc to {d.pulley_teeth}-tooth {d.belt} pulley); "
         f"generator damping at the hinge up to {f2(c_max(d),1)} N m s/rad (terminals shorted)\n"
         f"- Span factor after end losses {f2(span_factor(d),3)}; frictionless capture ceiling "
         f"A1² I2² / (6 A3 I4 L) = {f2(100*eta_max,2)} % of the wind through the prism\n"

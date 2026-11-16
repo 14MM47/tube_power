@@ -45,6 +45,18 @@ A square's side force pushes it the way it is already moving, so it extracts ene
 
 Galloping catches only ~4% of the wind passing it, against 15–20% for the light round tube at its tuned speed. So 330-G wins only at windy sites, and the smooth-flow coefficients it rests on may be optimistic in gusty air. See [designs/lantern-330-g/](designs/lantern-330-g/).
 
+**Lantern 330-GH** is the same prism built for the most power from 15 to 40 m/s, with no power cap and no pitch regulation. Its upgrades:
+- a direct-drive e-bike hub motor;
+- an HTD 8M belt on a 275 mm arc;
+- a ±25° swing with 3 kN springs;
+- an 800 mm neck on a 1,200 N·m hub.
+
+Nothing reaches its limit below 40 m/s, so the prism simply stays face-on, with a spring feather to 45° for storms and faults. It averages **152 W from 15 to 40 m/s** (330-G: 20 W), with 47 W at 20 m/s, 163 W at 30 and **384 W at 40 m/s**. The cost is a 6 m/s cut-in. It only beats 330-G over a year where the mean wind is above about 8 m/s, because winds above 25 m/s blow for about an hour a year even at a 7.5 m/s site.
+
+```bash
+python3 tools/galloping_calc.py curve --config GH --compare
+```
+
 ## Repository map
 
 | Path | Contents |

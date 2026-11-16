@@ -42,7 +42,7 @@ No prices are given; check current suppliers. Masses and ratings come from `tool
 | Hinge | 25 mm stainless axle, two sealed deep-groove ball bearings (6005-2RS) 300 mm apart | Hub and post head built for 800 N m; each bearing carries ~2.5 kN at 45 m/s |
 | | Rubber end stops | ±20° |
 | Springs | Two compression springs, ~31 N/mm each, ~40 mm usable travel, fatigue-rated, working force up to ~1.1 kN | Carriage 15–140 mm below the hinge, T8 lead screw and NEMA-17 stepper as on 250-B |
-| Drive | GT2 belt on a 100 mm-radius arc on the hub; pulley to suit the generator | |
+| Drive | GT2 9 mm belt on a 100 mm-radius arc on the hub; 12-tooth pulley on the generator (26:1) | Peak tension ~160 N |
 | Generator | 8108-size pancake outrunner, ~100 W class, wound for ~24 V (about 0.2 V s/rad) | Measure Ke, winding resistance and spin-down drag before fitting |
 | Head | Yaw bearing, tail vane ~0.1 m² on a ~0.7 m boom | Slip ring or cable-untwist routine |
 | Post | Steel tube for a ~3 m hinge height (e.g. 114 × 6 mm), guyed, ideally tilt-down | Base moment about 3.0 kN m at 45 m/s, 2.3 kN m generating at 40 m/s. Size to your local wind code |
@@ -116,9 +116,30 @@ python3 tools/galloping_calc.py report --A1 1.9 --A3 15 --turb_factor 1.0   # yo
 python3 tools/galloping_calc.py sweep --site 6.0          # best design for a 6 m/s site
 ```
 
-## 7. Safety
+## 7. Building 330-GH (most power from 15 to 40 m/s) instead
 
-- The prism swings ±15° at the hinge: about ±0.4 m at its top, 4.6 m above ground, at up to 3.7 Hz in strong wind. Keep people and branches clear.
+330-GH shares the prism, end plates, panels and post. Changes from the parts list above:
+
+| Group | 330-GH | Why |
+|---|---|---|
+| Neck | 50 × 47 mm carbon, **800 mm** | Better capture; storm moment taken by the stronger hub |
+| Hinge and hub | Built for **1,200 N·m**; 25 mm axle, two 6005-2RS bearings 300 mm apart (~2.9 kN each at 45 m/s) | Longer neck |
+| Feather | **Two-position**: a pivot at the neck foot latched face-on by an electromagnetic latch (power to hold), with a torsion spring to a 45° stop | No pitch regulation is needed; the feather is the storm and fault stop |
+| Stops and stroke | Rubber stops at **±30°**; design swing ±25° | Lower frequency, so lower spring and inertial loads at high wind |
+| Springs | Two heavy die springs, **~51 N/mm, ~3 kN working force, ±45 mm travel** at the outer carriage position | Frequency up to 2.9 Hz with the larger swing |
+| Drive | **HTD 8M 20 mm** belt on a **275 mm-radius** arc, 22-tooth pulley (9.8:1) | Peak tension ~475 N (~130 N·m at the hinge) |
+| Generator | **Direct-drive e-bike hub motor**, ~500 W class (~0.75 V·s/rad, ~0.3 Ω) | Absorbs the full galloping load at 40 m/s: ~750 rpm, 59 V peak, 44 W of heat |
+| Electronics | Rated **≥ 100 V**; MPPT converter for ~400 W peak into a 48 V battery or a dump load | |
+
+Measure the hub motor's spin-down drag before fitting it. At ~0.25 N·m it sets the 6 m/s cut-in, and any more raises it.
+
+```bash
+python3 tools/galloping_calc.py report --config GH --gen_drag 0.4 --Ke 0.7 --R_coil 0.35   # your measured hub motor
+```
+
+## 8. Safety
+
+- The prism swings ±15° at the hinge: about ±0.4 m at its top, 4.6 m above ground, at up to 3.7 Hz in strong wind. 330-GH swings ±25°: about ±0.76 m at its top, 4.8 m up, with ~27 g at the top at 40 m/s. Keep people and branches clear.
 - The post carries about 3 kN m at its base in a 45 m/s storm. Guy it, and lower the head for all work.
 - Never rely on the brake alone: the feather spring is the primary protection, the shorted generator the second.
 - Belt arc, springs and carriage carry hundreds of newtons: guard them.

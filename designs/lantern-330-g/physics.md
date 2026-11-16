@@ -122,6 +122,8 @@ Two generator classes are modelled. Their values are **assumed** for the size cl
 |---|---|---|---|---|---|---|
 | `5208` gimbal motor (as Lantern 250-B) | 0.38 | 12 | 6 × 10⁻⁵ | 0.004 | 5 | 1,500 |
 | `8108` pancake outrunner, ~100 W class, wound for ~24 V | 0.20 | 0.8 | 2.5 × 10⁻⁴ | 0.010 | 20 | 3,000 |
+| `6374` e-skateboard outrunner, ~1.5 kW class, low-KV winding | 0.12 | 0.18 | 6 × 10⁻⁴ | 0.03 | 60 | 6,000 |
+| `hub500` direct-drive e-bike hub motor, ~500 W class (330-GH) | 0.75 | 0.30 | 8 × 10⁻³ | 0.25 | 80 | 800 |
 
 The trade is between drag at low wind (drag × G is friction at the hinge, which sets the cut-in) and the load needed at high wind (c_max must be several times the optimum load to keep copper losses down).
 
@@ -149,8 +151,20 @@ End losses use the same assumption as the VIV design: half a face width of span 
 | Quasi-steady | 20 × f D / U (must stay ≤ 1, i.e. U/(fD) ≥ 20) |
 | Flow angle | α_top ÷ 0.40 rad |
 | Generator | Heat, speed, voltage, load (as section 6) |
+| Belt | Peak belt tension (generator load torque c_e V plus drag, divided by the arc radius) against the belt's allowable working tension: GT2 6 mm 120 N, GT2 9 mm 180 N, HTD 5M 15 mm 450 N, HTD 8M 20 mm 1,100 N, HTD 8M 30 mm 1,700 N (assumed; check the supplier's rating) |
 
 **Survival** is checked feathered and braked. All parked loads scale with q, so each part's survival wind is 10 m/s ÷ √(utilisation at 10 m/s). The requirement is 45 m/s, a margin over the 40 m/s cut-out.
+
+## 8a. Pitch regulation, and when it is not needed
+
+Pitch changes nothing about how much power the prism *could* give. It only throws power away, by weakening the galloping drive. It is worth having only where something must be held down:
+
+- **330-G** holds a chosen 20 W rating, so it pitches from 15.5 m/s up.
+- **330-GH** has no rating. Every part was upgraded until nothing reaches its limit below 40 m/s, so the best pitch at every wind is zero. It is built with a two-position feather (face-on or 45°) instead of a pitch drive. `--pitch_control 0` makes the calculator use only those two positions.
+
+Without pitch, the controller still has two other ways to stay within limits: more generator load (overdamping) and higher spring stiffness. It checks both at every wind.
+
+Feathering is still needed. It removes the galloping drive whatever has failed in the drivetrain, and it cuts storm drag by about a fifth.
 
 ## 9. Yearly energy
 

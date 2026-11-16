@@ -12,6 +12,7 @@ Designs that pass are ranked by central-case yearly energy at a 4.5 m/s-mean sit
 | File | Rows | Grid |
 |---|---|---|
 | `grid-wide.csv` | 4,320 | D 200–325 mm (25 mm steps); neck 0–800 mm (200 mm); end plates 1.5, 1.75, 2.0 × D; panels xps5, xps6-storm, xps10-storm, corflute4; pulley 10, 12, 16 teeth; spring top 4 Hz; generators 5208 and 8108; hubs 500 and 800 N·m |
+| `grid-high-wind.csv` | 5,184 | **Ranked by average power from 15 to 40 m/s, no power cap.** D 300, 330 mm; neck 600–800 mm (100 mm); plates 2.0 × D; panels xps10-storm; drives GT2 9 mm 100 mm arc 12 T, HTD 5M 15 mm 200/250 mm arcs 14 T, HTD 8M 20 mm 250/300 mm arcs 22 T, HTD 8M 30 mm 300 mm arc 22 T; spring top 4, 6 Hz; generators 8108, 6374, hub500; hubs 800, 1,200 N·m; swing ±15/20/25°; springs 1.5, 3 kN; neck tube lightest passing and one size heavier; electronics rated 100 V |
 | `grid-fine.csv` | 960 | D 300–330 mm (10 mm); neck 400–800 mm (100 mm); plates 1.75, 2.0; panels xps6-storm, xps10-storm; pulley 10, 12, 14, 16 teeth; spring top 3, 4, 6 Hz; generator 8108; hub 800 N·m |
 
 ```bash
@@ -21,6 +22,12 @@ python3 tools/galloping_calc.py sweep --D-min 0.2 --D-max 0.325 --D-step 0.025 -
 ```bash
 python3 tools/galloping_calc.py sweep --D-min 0.3 --D-max 0.33 --D-step 0.01 --neck-min 0.4 --neck-max 0.8 --neck-step 0.1 --plate-min 1.75 --plate-max 2.0 --plate-step 0.25 --shells xps6-storm,xps10-storm --teeth 10,12,14,16 --ftop 3,4,6 --gens 8108 --hubs 800 --csv designs/lantern-330-g/calculator-output/grid/grid-fine.csv
 ```
+
+```bash
+python3 tools/galloping_calc.py sweep --objective high --P_rated 1e6 --V_max 100 --D-min 0.30 --D-max 0.33 --D-step 0.03 --neck-min 0.6 --neck-max 0.8 --neck-step 0.1 --plate-min 2 --plate-max 2 --shells xps10-storm --drives GT2-9:100:12,HTD5M-15:200:14,HTD5M-15:250:14,HTD8M-20:250:22,HTD8M-20:300:22,HTD8M-30:300:22 --gens 8108,6374,hub500 --ftop 4,6 --hubs 800,1200 --strokes 15,20,25 --springs 1500,3000 --neck-up 1 --csv designs/lantern-330-g/calculator-output/grid/grid-high-wind.csv
+```
+
+The two earlier grids were produced before the belt-tension check and the drive, stroke and spring options were added. They used a GT2 belt on a 100 mm arc, a ±15° swing and 1.5 kN springs, and have no columns for those choices.
 
 The sweep uses all CPU cores (`--workers` to change); the wide grid takes about 10 minutes on four.
 
@@ -33,7 +40,9 @@ The sweep uses all CPU cores (`--workers` to change); the wide grid takes about 
 | `D_mm`, `neck_mm` | Prism face width; hinge to prism bottom |
 | `plate_ratio`, `plate_mm` | End-plate side ÷ face width; end-plate side |
 | `shell`, `shell_kg_m2` | Panel construction and its areal mass |
-| `generator`, `pulley_teeth`, `gear_ratio` | Generator preset; GT2 pulley teeth; ratio from a 100 mm arc |
+| `generator`, `belt`, `arc_mm`, `pulley_teeth`, `gear_ratio` | Generator preset; belt preset; hub arc radius; generator pulley teeth; resulting ratio |
+| `stroke_deg`, `spring_force_max_N` | Design swing amplitude (stops 5° further); per-spring force limit |
+| `p_mean_15_40_W` | Average electrical output over 15, 16, … 40 m/s (high-wind grid only) |
 | `f_spring_top_Hz` | Swing frequency with the spring carriage furthest out |
 | `neck_tube`, `total_height_m` | Carbon neck, outside × inside mm; prism plus neck |
 | `annual_kWh`, `annual_low_kWh`, `site_mean_wind`, `annual_6_kWh` | Yearly energy (Rayleigh wind, 80% of model output achieved) at the ranking site and at a 6 m/s site; low case is half |

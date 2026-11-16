@@ -7,7 +7,7 @@ Electrical: the most the machine delivers with every part within its limits and 
 - Survives feathered (45°) and braked up to **46.7 m/s**, limited by the end plates. Requirement 45 m/s. Per part: neck 54, skin 72, panels 61, end plates 47, hub 47
 - Swing frequency range 0.12-4.00 Hz (spring carriage 15-140 mm); neck-and-prism bending mode 16.7 Hz
 - Quasi-steady theory trusted from U/(fD) = 20; vortex-shedding resonance would be at U/(fD) = 7.7
-- Yearly energy, central case (kWh): 3.5 m/s site 2.7; 4.5 m/s site 6.2; 5.5 m/s site 11.6; 6.5 m/s site 19.0
+- Yearly energy, central case (kWh): 3.5 m/s site 2.7; 4.5 m/s site 6.2; 5.5 m/s site 11.6; 6.5 m/s site 19.0; 7.5 m/s site 27.8
 
 | Wind (m/s) | Wind through prism (W) | Potential face-on (W) | Electrical (W) | Low case (W) | What governs | Pitch (°) | Swing (±°) | Swing f (Hz) | VIV 250-B kept generating (W) | VIV 250-C kept generating (W) |
 |---|---|---|---|---|---|---|---|---|---|---|
