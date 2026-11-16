@@ -1159,8 +1159,8 @@ def sweep(base: GDesign, args: argparse.Namespace) -> str:
     o.append("|" + "---|" * 18)
     for r in passing[: args.top]:
         o.append(f"| {r['rank']} | {r['annual_kWh']} | {r['annual_6_kWh']} | {r['D_mm']} | {r['neck_mm']} | "
-                 f"{r['neck_tube']} | {r['plate_ratio']} | {r['shell']} | {r['generator']} | {r['pulley_teeth']} | {r['hub_Nm']:g} | "
-                 f"{r['f_spring_top_Hz']:g} | {r['p_elec_4p5_W']} | {r['p_elec_10_W']} | {r['p_elec_20_W']} | "
+                 f"{r['neck_tube']} | {r['plate_ratio']} | {r['shell']} | {r['generator']} | {r['pulley_teeth']} | "
+                 f"{r['f_spring_top_Hz']:g} | {r['hub_Nm']:g} | {r['p_elec_4p5_W']} | {r['p_elec_10_W']} | {r['p_elec_20_W']} | "
                  f"{r['p_elec_40_W']} | {r['cut_in_ms']} | {r['survival_ms']} ({r['survival_limit']}) |")
     return "\n".join(o)
 
