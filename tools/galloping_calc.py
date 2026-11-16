@@ -57,7 +57,28 @@ GENERATORS = {
                  gen_heat_max=5.0, gen_rpm_max=1500.0),
     "8108": dict(Ke=0.20, R_coil=0.80, gen_rotor_J=2.5e-4, gen_drag=0.010, gen_cogging=0.02,
                  gen_heat_max=20.0, gen_rpm_max=3000.0),
+    # e-skateboard size outrunner (~1.5 kW class), wound low-KV
+    "6374": dict(Ke=0.12, R_coil=0.18, gen_rotor_J=6e-4, gen_drag=0.03, gen_cogging=0.05,
+                 gen_heat_max=60.0, gen_rpm_max=6000.0),
+    # direct-drive e-bike hub motor (~500 W class): high torque constant, heavy drag
+    "hub500": dict(Ke=0.75, R_coil=0.30, gen_rotor_J=8e-3, gen_drag=0.25, gen_cogging=0.4,
+                   gen_heat_max=80.0, gen_rpm_max=800.0),
 }
+
+# Toothed belts from the hub arc to the generator pulley: pitch, allowable working
+# tension (assumed; check the supplier's rating) and smallest sensible pulley.
+BELTS = {
+    "GT2-6": dict(belt_pitch=0.002, belt_allow=120.0),
+    "GT2-9": dict(belt_pitch=0.002, belt_allow=180.0),
+    "HTD5M-15": dict(belt_pitch=0.005, belt_allow=450.0),
+    "HTD8M-20": dict(belt_pitch=0.008, belt_allow=1100.0),
+    "HTD8M-30": dict(belt_pitch=0.008, belt_allow=1700.0),
+}
+BELT_MIN_TEETH = {"GT2-6": 10, "GT2-9": 10, "HTD5M-15": 14, "HTD8M-20": 22, "HTD8M-30": 22}
+
+# Carbon neck tubes for the galloping prism: the VIV list plus heavier walls and 60 mm
+G_NECK_TUBES = sorted(set(NECK_TUBES + [(0.050, 0.045), (0.060, 0.056), (0.060, 0.054)]),
+                      key=lambda t: t[0] ** 2 - t[1] ** 2)
 
 # Galloping coefficients (smooth flow). Only the square's are well established.
 SECTIONS = {
@@ -130,7 +151,9 @@ class GDesign:
     # Drive
     arc_radius: float = 0.100  # m
     pulley_teeth: int = 12
+    belt: str = "GT2-9"  # see BELTS
     belt_pitch: float = 0.002  # m
+    belt_allow: float = 180.0  # allowable working tension, N
     belt_eff: float = 0.97
 
     # Generator (see GENERATORS)
@@ -520,6 +543,11 @@ def ce_for_V(cx: tuple, V: float, w: float) -> float:
 SWINGING = ("generating", "limited")
 
 
+def belt_tension(d: GDesign, op: dict) -> float:
+    """Peak belt tension: generator load torque plus generator drag, carried by the hub arc, N."""
+    return (op["c_e"] * op["V"] + d.gen_drag * gear_ratio(d)) / d.arc_radius
+
+
 def loads(d: GDesign, U: float, op: dict | None, mode: str) -> dict:
     """Structural and electrical loads at wind U. op None = parked (feathered when U is high)."""
     m = masses(d)
@@ -573,10 +601,12 @@ def loads(d: GDesign, U: float, op: dict | None, mode: str) -> dict:
         "hub": m_drag_hinge / d.M_hinge_max,
     }
     spring_N = 0.0
+    spring_mm = 0.0
     if swinging:
         k_s = spring_rate(d)
         r_c = carriage_radius(d, w)
         spring_N = k_s * r_c * (th + op["lean"])
+        spring_mm = 1000 * r_c * (th + op["lean"])
         utils.update({
             "stroke": (th + op["lean"]) / math.radians(d.swing_design_deg),
             "springs": spring_N / d.spring_force_max,
@@ -587,6 +617,7 @@ def loads(d: GDesign, U: float, op: dict | None, mode: str) -> dict:
             "generator heat": op["gen_heat"] / d.gen_heat_max,
             "generator speed": op["gen_rpm_peak"] / d.gen_rpm_max,
             "generator load": op["c_e"] * d.R_margin / c_max(d),
+            "belt": belt_tension(d, op) / d.belt_allow,
         })
     # the frequency rule always uses the whole design stroke, so the stroke only governs when exceeded
     pick = {k: v for k, v in utils.items() if k != "stroke" or v > 1.0001}
@@ -595,7 +626,7 @@ def loads(d: GDesign, U: float, op: dict | None, mode: str) -> dict:
         "q": q, "drag": F, "side": side, "m_drag_hinge": m_drag_hinge, "m_inert": m_inert, "m_aero": m_aero,
         "neck_peak_MPa": neck_peak / 1e6, "neck_cyc_MPa": neck_cyc / 1e6, "skin_MPa": skin / 1e6,
         "panel_moment": q * panel_moment_per_q(d), "bushing_N": bushing, "post_moment": post_moment,
-        "head_drag": head_drag, "pitch_torque": pitch_torque, "spring_N": spring_N,
+        "head_drag": head_drag, "pitch_torque": pitch_torque, "spring_N": spring_N, "spring_mm": spring_mm,
         "top_accel_g": th * w**2 * b / G0, "utils": utils, "worst": worst, "worst_util": utils[worst],
     }
 
@@ -755,14 +786,15 @@ def annual_energy(d: GDesign, mean_wind: float, step: float = 0.25, cache: dict 
     return total * d.avail * 8760.0 / 1000.0
 
 
-def size_neck(d: GDesign) -> GDesign:
-    """Lightest standard neck tube that survives U_storm feathered and whose bending
-    mode clears the top of the spring range by the margin."""
-    for od, idd in NECK_TUBES:
+def size_neck(d: GDesign, up: int = 0) -> GDesign:
+    """Lightest carbon neck tube that survives U_storm feathered and whose bending mode
+    clears the top of the spring range by the margin; up > 0 takes that many sizes heavier."""
+    for i, (od, idd) in enumerate(G_NECK_TUBES):
         t = replace(d, neck_od=od, neck_id=idd)
         if survival(t)[2]["neck"] >= d.U_storm and neck_mode_freq(t) >= d.mode_margin * d.f_spring_top:
-            return t
-    od, idd = NECK_TUBES[-1]
+            od, idd = G_NECK_TUBES[min(i + up, len(G_NECK_TUBES) - 1)]
+            return replace(d, neck_od=od, neck_id=idd)
+    od, idd = G_NECK_TUBES[-1]
     return replace(d, neck_od=od, neck_id=idd)
 
 
@@ -796,7 +828,7 @@ def pct(u: float) -> str:
 ENVELOPE_SPEEDS = [1, 2, 3, 4, 4.5, 5, 6, 7, 8, 10, 12, 15, 17.5, 20, 25, 30, 35, 40, 45]
 CURVE_SPEEDS = [1, 2, 3, 4, 4.5, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17.5, 20, 25, 30, 35, 40]
 U_KEYS = ["neck", "neck fatigue", "skin", "panels", "end plates", "hub", "stroke", "springs", "neck mode",
-          "quasi-steady", "flow angle", "voltage", "generator heat", "generator speed", "generator load"]
+          "quasi-steady", "flow angle", "voltage", "generator heat", "generator speed", "generator load", "belt"]
 
 
 def envelope_rows(d: GDesign, speeds) -> list[dict]:
@@ -819,7 +851,8 @@ def envelope_rows(d: GDesign, speeds) -> list[dict]:
             "emf": op["emf_peak"] if sw else 0.0, "heat": op["gen_heat"] if sw else 0.0,
             "rpm": op["gen_rpm_peak"] if sw else 0.0,
             "drag": lo["drag"], "hinge_moment": lo["m_drag_hinge"], "post_moment": lo["post_moment"],
-            "spring_N": lo["spring_N"], "top_g": lo["top_accel_g"],
+            "spring_N": lo["spring_N"], "spring_mm": lo["spring_mm"], "top_g": lo["top_accel_g"],
+            "belt_N": belt_tension(d, op) if sw else 0.0,
             **{"u_" + k: lo["utils"].get(k, 0.0) for k in U_KEYS},
             "worst": lo["worst"], "worst_util": lo["worst_util"],
         })
@@ -829,8 +862,8 @@ def envelope_rows(d: GDesign, speeds) -> list[dict]:
 def envelope_table(d: GDesign, speeds) -> list[str]:
     o = ["| Wind (m/s) | Mode | Pitch (°) | Swing f (Hz) | U/(fD) | Swing (±°) | Lean (°) | Elec (W) | "
          "Gen load (N m s/rad) | EMF (V) | Gen heat (W) | Neck | Fatigue | Skin | Panels | Hub | Stroke | "
-         "Springs | Worst |",
-         "|" + "---|" * 19]
+         "Springs | Belt | Worst |",
+         "|" + "---|" * 20]
     for r in envelope_rows(d, speeds):
         sw = r["mode"] in SWINGING
         o.append(
@@ -838,7 +871,7 @@ def envelope_table(d: GDesign, speeds) -> list[str]:
             f"{f2(r['f_Hz']) if sw else '-'} | {f2(r['Ustar'],0) if sw else '-'} | {f2(r['swing_deg'],1)} | "
             f"{f2(r['lean_deg'],1)} | {f2(r['p_elec'],2)} | {f2(r['gen_load'],2)} | {f2(r['emf'],0)} | "
             f"{f2(r['heat'],1)} | {pct(r['u_neck'])} | {pct(r['u_neck fatigue'])} | {pct(r['u_skin'])} | "
-            f"{pct(r['u_panels'])} | {pct(r['u_hub'])} | {pct(r['u_stroke'])} | {pct(r['u_springs'])} | "
+            f"{pct(r['u_panels'])} | {pct(r['u_hub'])} | {pct(r['u_stroke'])} | {pct(r['u_springs'])} | {pct(r['u_belt'])} | "
             f"{r['worst']} {pct(r['worst_util'])}{' **FAIL**' if r['worst_util'] > 1.0001 else ''} |"
         )
     return o
@@ -894,13 +927,23 @@ def summary_lines(d: GDesign) -> list[str]:
     ci = cut_in(d)
     gto = generates_to(d, max(ci, 1.0) if ci == ci else 10.0, 0.5)
     w_lo, w_top = omega_range(d)
-    rated_at = next((U / 4 for U in range(4, 4 * int(d.U_cut_out) + 1)
-                     if (lambda s: s["mode"] in SWINGING and s["op"]["p_elec"] >= 0.995 * d.P_rated)(operate(d, U / 4))),
-                    math.nan)
+    if d.P_rated < 1e4:
+        rated_at = next((U / 4 for U in range(4, 4 * int(d.U_cut_out) + 1)
+                         if (lambda s: s["mode"] in SWINGING and s["op"]["p_elec"] >= 0.995 * d.P_rated)(operate(d, U / 4))),
+                        math.nan)
+        rating = f"- Rated {d.P_rated:g} W electrical, reached at {f2(rated_at,2)} m/s; pitch holds it above that"
+    else:
+        sts = [(U, operate(d, U)) for U in range(15, int(d.U_cut_out) + 1)]
+        pw = [st["op"]["p_elec"] if st["mode"] in SWINGING else 0.0 for U, st in sts]
+        pitched = [U for U, st in sts if st["mode"] in SWINGING and st["op"]["beta"] > 0]
+        rating = (f"- No power cap. Mean electrical output from 15 to {d.U_cut_out:g} m/s **{f2(sum(pw)/len(pw),1)} W**; "
+                  f"{f2(pw[0],1)} W at 15 m/s, {f2(pw[-1],1)} W at {d.U_cut_out:g} m/s. "
+                  + (f"Pitch used from {pitched[0]} m/s to stay within limits" if pitched
+                     else "Pitch never needed below cut-out (only for feathering)"))
     return [
         f"- Cut-in (starts with kick-start and makes >10 mW): {f2(ci,1)} m/s; generates without a gap to "
         f"**{f2(gto,1)} m/s**; feathers above {d.U_cut_out:g} m/s",
-        f"- Rated {d.P_rated:g} W electrical, reached at {f2(rated_at,2)} m/s; pitch holds it above that",
+        rating,
         f"- Survives feathered (45°) and braked up to **{f2(surv,1)} m/s**, limited by the {part}. "
         f"Requirement {d.U_storm:g} m/s. Per part: " + ", ".join(f"{k} {f2(v,0)}" for k, v in winds.items()),
         f"- Swing frequency range {f2(w_lo/(2*math.pi),2)}-{f2(w_top/(2*math.pi),2)} Hz (spring carriage "
@@ -914,7 +957,7 @@ def summary_lines(d: GDesign) -> list[str]:
 def curve_summary(d: GDesign) -> list[str]:
     o = summary_lines(d)
     o.append("- Yearly energy, central case (kWh): " + "; ".join(
-        f"{V} m/s site {f2(annual_energy(d, V),1)}" for V in (3.5, 4.5, 5.5, 6.5)))
+        f"{V} m/s site {f2(annual_energy(d, V),1)}" for V in (3.5, 4.5, 5.5, 6.5, 7.5)))
     return o
 
 
@@ -955,8 +998,10 @@ def describe(d: GDesign) -> str:
     return (f"{d.section} prism {d.D*1000:.0f} mm x {d.L*1000:.0f} mm, neck {d.neck*1000:.0f} mm "
             f"({d.neck_od*1000:.0f}x{d.neck_id*1000:.0f} mm carbon), end plates {m['plate_side']*1000:.0f} mm square, "
             f"panels {d.shell_areal:.3f} kg/m^2 (capacity {d.panel_cap:g} N m/m), generator {d.gen}, "
-            f"{d.pulley_teeth}-tooth pulley ({f2(gear_ratio(d),1)}:1), springs to {d.f_spring_top:g} Hz, "
-            f"rated {d.P_rated:g} W, survival requirement {d.U_storm:g} m/s")
+            f"{d.belt} belt, {d.arc_radius*1000:.0f} mm arc to {d.pulley_teeth}-tooth pulley ({f2(gear_ratio(d),1)}:1), "
+            f"springs to {d.f_spring_top:g} Hz ({d.spring_force_max:g} N each), swing ±{d.swing_design_deg:g}°, "
+            + (f"rated {d.P_rated:g} W" if d.P_rated < 1e4 else "no power cap")
+            + f", hub {d.M_hinge_max:g} N m, survival requirement {d.U_storm:g} m/s")
 
 
 def report(d: GDesign) -> str:
@@ -1024,7 +1069,8 @@ def report(d: GDesign) -> str:
         l2 = st["lo"]
         o.append(f"- Generating at {d.U_cut_out:g} m/s: drag {f2(l2['drag'],0)} N, hinge moment "
                  f"{f2(l2['m_drag_hinge'],0)} N m, post base {f2(l2['post_moment'],0)} N m, "
-                 f"spring force {f2(l2['spring_N'],0)} N")
+                 f"spring force {f2(l2['spring_N'],0)} N over ±{f2(l2['spring_mm'],0)} mm, "
+                 f"belt tension {f2(belt_tension(d, st['op']),0)} N (allowable {d.belt_allow:g})")
     o.append("")
     o.append("## Annual energy (very rough)\n")
     o.append(f"Rayleigh wind at hub height, the power curve above, {int(100*d.avail)} % of the model output "
@@ -1051,22 +1097,27 @@ def envelope_report(d: GDesign, step: float, top: float, start: float) -> str:
 
 GRID_COLUMNS = [
     "rank", "passes", "failed_limits", "D_mm", "neck_mm", "plate_ratio", "plate_mm", "shell", "shell_kg_m2",
-    "generator", "pulley_teeth", "gear_ratio", "f_spring_top_Hz", "neck_tube", "total_height_m",
-    "annual_kWh", "annual_low_kWh", "site_mean_wind", "annual_6_kWh",
-    "p_elec_4p5_W", "p_elec_7_W", "p_elec_10_W", "p_elec_15_W", "p_elec_20_W", "p_elec_40_W",
+    "generator", "belt", "arc_mm", "pulley_teeth", "gear_ratio", "f_spring_top_Hz", "stroke_deg",
+    "spring_force_max_N", "neck_tube", "total_height_m", "p_mean_15_40_W",
+    "annual_kWh", "annual_low_kWh", "site_mean_wind", "annual_6_kWh", "annual_7p5_kWh",
+    "p_elec_4p5_W", "p_elec_7_W", "p_elec_10_W", "p_elec_15_W", "p_elec_20_W", "p_elec_25_W", "p_elec_30_W",
+    "p_elec_40_W",
     "min_p_20_40_W", "cut_in_ms", "generates_to_ms", "rated_W", "hub_Nm", "survival_ms", "survival_limit",
     "swinging_mass_kg", "inertia_total_kgm2", "f_min_Hz", "neck_mode_Hz", "spring_rate_N_mm",
 ]
 
 
-def evaluate(args_tuple) -> dict:
+def evaluate(job: tuple) -> dict:
     """Build and score one grid point (top-level so multiprocessing can call it)."""
-    base, D, nk, pr, sh, t, ft, gen, hub, site, neck_auto, hold = args_tuple
-    d = replace(base, D=D, neck=nk, plate_ratio=pr, pulley_teeth=t, f_spring_top=ft, gen=gen,
-                M_hinge_max=hub, hub_mass=0.45 * (hub / 500.0) ** 0.5,
-                **SHELLS[sh], **GENERATORS[gen])
+    base, v, site, neck_auto, neck_up, hold = job
+    belt, arc, teeth = v["drive"]
+    d = replace(base, D=v["D"], neck=v["neck"], plate_ratio=v["plate"], f_spring_top=v["ftop"], gen=v["gen"],
+                M_hinge_max=v["hub"], hub_mass=0.45 * (v["hub"] / 500.0) ** 0.5,
+                swing_design_deg=v["stroke"], swing_stop_deg=v["stroke"] + 5.0, spring_force_max=v["spring"],
+                belt=belt, arc_radius=arc, pulley_teeth=teeth,
+                **SHELLS[v["shell"]], **GENERATORS[v["gen"]], **BELTS[belt])
     if neck_auto:
-        d = size_neck(d)
+        d = size_neck(d, neck_up)
     cache: dict = {}
 
     def pe(U: float) -> float:
@@ -1074,7 +1125,7 @@ def evaluate(args_tuple) -> dict:
         return st["op"]["p_elec"] if st["mode"] in SWINGING else 0.0
 
     pts = {U: pe(U) for U in (4.5, 7.0)}
-    high = [(U, pe(U)) for U in frange(10.0, d.U_cut_out, 2.5)]
+    high = [(U, pe(U)) for U in frange(10.0, d.U_cut_out, 1.0)]
     pts.update(high)
     gto = math.nan
     for U, p in high:
@@ -1082,52 +1133,78 @@ def evaluate(args_tuple) -> dict:
             break
         gto = U
     fails = constraint_failures(d, gen_to=gto)
-    if hold:
+    if hold and d.P_rated < 1e4:
         reached = [U for U, p in high if p >= 0.95 * d.P_rated]
         if not reached or reached[0] > 25.0 or any(p < 0.95 * d.P_rated for U, p in high if U >= reached[0]):
             fails.append("does not hold rating")
     ann = annual_energy(d, site, step=0.5, cache=cache)
     ann6 = annual_energy(d, 6.0, step=0.5, cache=cache)
+    ann75 = annual_energy(d, 7.5, step=0.5, cache=cache)
     surv, part, _ = survival(d)
     w_lo, _ = omega_range(d)
     m = masses(d)
+    mid = [p for U, p in high if U >= 15.0]
     return {
         "passes": "yes" if not fails else "no", "failed_limits": "; ".join(fails),
-        "D_mm": round(D * 1000), "neck_mm": round(nk * 1000), "plate_ratio": round(pr, 2),
-        "plate_mm": round(m["plate_side"] * 1000), "shell": sh, "shell_kg_m2": d.shell_areal,
-        "generator": gen, "pulley_teeth": t, "gear_ratio": round(gear_ratio(d), 2), "f_spring_top_Hz": ft,
+        "D_mm": round(d.D * 1000), "neck_mm": round(d.neck * 1000), "plate_ratio": round(d.plate_ratio, 2),
+        "plate_mm": round(m["plate_side"] * 1000), "shell": v["shell"], "shell_kg_m2": d.shell_areal,
+        "generator": v["gen"], "belt": belt, "arc_mm": round(arc * 1000), "pulley_teeth": teeth,
+        "gear_ratio": round(gear_ratio(d), 2), "f_spring_top_Hz": v["ftop"], "stroke_deg": v["stroke"],
+        "spring_force_max_N": v["spring"],
         "neck_tube": f"{d.neck_od*1000:.0f}x{d.neck_id*1000:.0f}", "total_height_m": round(d.neck + d.L, 3),
+        "p_mean_15_40_W": round(sum(mid) / len(mid), 3),
         "annual_kWh": round(ann, 3), "annual_low_kWh": round(d.derate * ann, 3), "site_mean_wind": site,
-        "annual_6_kWh": round(ann6, 3),
+        "annual_6_kWh": round(ann6, 3), "annual_7p5_kWh": round(ann75, 3),
         "p_elec_4p5_W": round(pts[4.5], 3), "p_elec_7_W": round(pts[7.0], 3), "p_elec_10_W": round(pts[10.0], 3),
-        "p_elec_15_W": round(pts[15.0], 3), "p_elec_20_W": round(pts[20.0], 3), "p_elec_40_W": round(pts[40.0], 3),
-        "min_p_20_40_W": round(min(p for U, p in high if U >= 20.0), 3), "hub_Nm": hub,
+        "p_elec_15_W": round(pts[15.0], 3), "p_elec_20_W": round(pts[20.0], 3), "p_elec_25_W": round(pts[25.0], 3),
+        "p_elec_30_W": round(pts[30.0], 3), "p_elec_40_W": round(pts[40.0], 3),
+        "min_p_20_40_W": round(min(p for U, p in high if U >= 20.0), 3), "hub_Nm": v["hub"],
         "cut_in_ms": round(cut_in(d), 1) if pts[4.5] > 0 or pts[7.0] > 0 else "",
-        "generates_to_ms": gto, "rated_W": d.P_rated, "survival_ms": round(surv, 1), "survival_limit": part,
+        "generates_to_ms": gto, "rated_W": d.P_rated if d.P_rated < 1e4 else "none",
+        "survival_ms": round(surv, 1), "survival_limit": part,
         "swinging_mass_kg": round(m["swinging"], 3), "inertia_total_kgm2": round(inertias(d)["total"], 4),
         "f_min_Hz": round(w_lo / (2 * math.pi), 3), "neck_mode_Hz": round(neck_mode_freq(d), 2),
         "spring_rate_N_mm": round(spring_rate(d) / 1000, 2),
     }
 
 
+def parse_drives(text: str, base: GDesign, teeth: list[int]) -> list[tuple]:
+    """Drive options as belt:arc_mm:teeth entries; without --drives, the base belt and arc with --teeth."""
+    if not text:
+        return [(base.belt, base.arc_radius, t) for t in teeth]
+    out = []
+    for item in text.split(","):
+        belt, arc, t = item.split(":")
+        out.append((belt, float(arc) / 1000.0, int(t)))
+    return out
+
+
+SWEEP_KEYS = {"annual": "annual_kWh", "high": "p_mean_15_40_W"}
+
+
 def sweep(base: GDesign, args: argparse.Namespace) -> str:
-    Ds = frange(args.D_min, args.D_max, args.D_step)
-    necks = frange(args.neck_min, args.neck_max, args.neck_step)
-    plates = frange(args.plate_min, args.plate_max, args.plate_step)
-    shells = args.shells.split(",")
-    teeth = [int(t) for t in args.teeth.split(",")]
-    ftops = [float(x) for x in args.ftop.split(",")]
-    gens = args.gens.split(",")
-    hubs = [float(x) for x in args.hubs.split(",")]
-    jobs = [(base, D, nk, pr, sh, t, ft, g, hb, args.site, args.neck_auto, args.hold_rated)
-            for D, nk, pr, sh, t, ft, g, hb in itertools.product(Ds, necks, plates, shells, teeth, ftops, gens, hubs)]
+    grid = {
+        "D": frange(args.D_min, args.D_max, args.D_step),
+        "neck": frange(args.neck_min, args.neck_max, args.neck_step),
+        "plate": frange(args.plate_min, args.plate_max, args.plate_step),
+        "shell": args.shells.split(","),
+        "drive": parse_drives(args.drives, base, [int(t) for t in args.teeth.split(",")]),
+        "ftop": [float(x) for x in args.ftop.split(",")],
+        "gen": args.gens.split(","),
+        "hub": [float(x) for x in args.hubs.split(",")],
+        "stroke": [float(x) for x in args.strokes.split(",")],
+        "spring": [float(x) for x in args.springs.split(",")],
+    }
+    names = list(grid)
+    jobs = [(base, dict(zip(names, combo)), args.site, args.neck_auto, nu, args.hold_rated)
+            for combo in itertools.product(*grid.values()) for nu in range(args.neck_up + 1)]
     if args.workers > 1:
         import multiprocessing as mp
         with mp.Pool(args.workers) as pool:
             rows = pool.map(evaluate, jobs, chunksize=4)
     else:
         rows = [evaluate(j) for j in jobs]
-    key = "annual_kWh" if args.objective == "annual" else "p_elec_" + args.wind_key + "_W"
+    key = SWEEP_KEYS.get(args.objective, "p_elec_" + args.wind_key + "_W")
     passing = sorted((r for r in rows if r["passes"] == "yes"), key=lambda r: r[key], reverse=True)
     for i, r in enumerate(passing, 1):
         r["rank"] = i
@@ -1141,26 +1218,32 @@ def sweep(base: GDesign, args: argparse.Namespace) -> str:
     for r in rows:
         for f in filter(None, r["failed_limits"].split("; ")):
             rejected[f] = rejected.get(f, 0) + 1
-    what = (f"central-case annual energy at a {args.site} m/s site" if args.objective == "annual"
-            else f"electrical power at {args.wind_key.replace('p', '.')} m/s")
+    what = {"annual": f"central-case annual energy at a {args.site} m/s site",
+            "high": "mean electrical power from 15 to 40 m/s"}.get(
+        args.objective, f"electrical power at {args.wind_key.replace('p', '.')} m/s")
+    rating = (f"rated {base.P_rated:g} W" + (" (must reach it by 25 m/s and hold it to cut-out)" if args.hold_rated else "")
+              if base.P_rated < 1e4 else "no power cap")
     o = [f"# Lantern G sweep: ranked by {what}; must generate to {base.U_cut_out:g} m/s and survive "
          f"{base.U_storm:g} m/s feathered\n"]
-    o.append(f"{len(rows)} combinations: D {Ds[0]}-{Ds[-1]} m, neck {necks[0]}-{necks[-1]} m, plate ratio "
-             f"{plates[0]}-{plates[-1]}, panels {', '.join(shells)}, pulley teeth {teeth}, spring top {ftops} Hz, "
-             f"generators {', '.join(gens)}, hubs {hubs} N m, rated {base.P_rated:g} W"
-             f"{' (must reach it by 25 m/s and hold it to cut-out)' if args.hold_rated else ''}"
-             f"{', neck tube sized automatically' if args.neck_auto else ''}.  ")
+    desc = "; ".join(f"{k} {', '.join(':'.join(str(round(y * 1000) if isinstance(y, float) and y < 1 else y) for y in x) if isinstance(x, tuple) else f'{x:g}' if isinstance(x, float) else str(x) for x in vals)}"
+                     for k, vals in grid.items())
+    o.append(f"{len(rows)} combinations ({desc}; {rating}"
+             f"{', neck tube sized automatically' if args.neck_auto else ''}"
+             f"{f' and up to {args.neck_up} sizes heavier' if args.neck_up else ''}).  ")
     o.append(f"{len(passing)} pass every limit. Rejected (a design can fail several): " +
              (", ".join(f"{k} {v}" for k, v in sorted(rejected.items())) or "none") + "\n")
     if not passing:
         return "\n".join(o)
-    o.append("| Rank | Annual (kWh, site) | Annual 6 m/s site | D | Neck | Neck tube | Plates | Panels | Gen | "
-             "Teeth | Spring top (Hz) | Hub (N m) | 4.5 m/s (W) | 10 m/s (W) | 20 m/s (W) | 40 m/s (W) | Cut-in | Survives |")
-    o.append("|" + "---|" * 18)
+    o.append("| Rank | Mean 15-40 m/s (W) | Annual 4.5 / 6 / 7.5 m/s site (kWh) | D | Neck | Neck tube | Plates | Panels | "
+             "Gen | Drive | Stroke | Springs (N) | Spring top (Hz) | Hub (N m) | 4.5 m/s | 10 | 15 | 20 | 25 | 30 | 40 m/s (W) | "
+             "Cut-in | Survives |")
+    o.append("|" + "---|" * 23)
     for r in passing[: args.top]:
-        o.append(f"| {r['rank']} | {r['annual_kWh']} | {r['annual_6_kWh']} | {r['D_mm']} | {r['neck_mm']} | "
-                 f"{r['neck_tube']} | {r['plate_ratio']} | {r['shell']} | {r['generator']} | {r['pulley_teeth']} | "
-                 f"{r['f_spring_top_Hz']:g} | {r['hub_Nm']:g} | {r['p_elec_4p5_W']} | {r['p_elec_10_W']} | {r['p_elec_20_W']} | "
+        o.append(f"| {r['rank']} | {r['p_mean_15_40_W']} | {r['annual_kWh']} / {r['annual_6_kWh']} / {r['annual_7p5_kWh']} | "
+                 f"{r['D_mm']} | {r['neck_mm']} | {r['neck_tube']} | {r['plate_ratio']} | {r['shell']} | {r['generator']} | "
+                 f"{r['belt']} {r['arc_mm']} mm arc, {r['pulley_teeth']} T ({r['gear_ratio']}:1) | ±{r['stroke_deg']:g}° | "
+                 f"{r['spring_force_max_N']:g} | {r['f_spring_top_Hz']:g} | {r['hub_Nm']:g} | {r['p_elec_4p5_W']} | "
+                 f"{r['p_elec_10_W']} | {r['p_elec_15_W']} | {r['p_elec_20_W']} | {r['p_elec_25_W']} | {r['p_elec_30_W']} | "
                  f"{r['p_elec_40_W']} | {r['cut_in_ms']} | {r['survival_ms']} ({r['survival_limit']}) |")
     return "\n".join(o)
 
@@ -1175,9 +1258,10 @@ def add_design_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--section-preset", dest="section_preset", choices=sorted(SECTIONS), default=None,
                    help="cross-section coefficients (only 'square' is well established)")
     for f in fields(GDesign):
-        if f.name in ("section", "gen"):
+        if f.name in ("section", "gen", "belt"):
             continue
         p.add_argument(f"--{f.name}", type=float, default=None, help=f"default {f.default}")
+    p.add_argument("--belt", dest="belt_preset", choices=sorted(BELTS), default=None, help="belt preset")
 
 
 def design_from(args: argparse.Namespace) -> GDesign:
@@ -1188,9 +1272,11 @@ def design_from(args: argparse.Namespace) -> GDesign:
         over.update(GENERATORS[args.generator], gen=args.generator)
     if getattr(args, "section_preset", None):
         over.update(SECTIONS[args.section_preset], section=args.section_preset)
+    if getattr(args, "belt_preset", None):
+        over.update(BELTS[args.belt_preset], belt=args.belt_preset)
     for f in fields(GDesign):
         v = getattr(args, f.name, None)
-        if v is not None and f.name not in ("section", "gen"):
+        if v is not None and f.name not in ("section", "gen", "belt"):
             over[f.name] = int(v) if f.type in ("int", int) else v
     return replace(GDesign(), **over)
 
@@ -1212,7 +1298,8 @@ def main() -> None:
         q.add_argument("--csv", default=None, help="also write the rows to this CSV file")
     ps = sub.add_parser("sweep", help="grid search for the best design that generates to 40 m/s")
     add_design_args(ps)
-    ps.add_argument("--objective", choices=("annual", "power"), default="annual")
+    ps.add_argument("--objective", choices=("annual", "high", "power"), default="annual",
+                    help="annual: yearly energy at --site; high: mean power from 15 to 40 m/s; power: at --wind-key")
     ps.add_argument("--wind-key", dest="wind_key", default="10", help="for --objective power: 4p5, 7, 10, 15, 20, 40")
     ps.add_argument("--site", type=float, default=4.5)
     ps.add_argument("--D-min", dest="D_min", type=float, default=0.20)
@@ -1229,6 +1316,12 @@ def main() -> None:
     ps.add_argument("--ftop", default="2,3,4,6", help="spring-range tops to try, Hz")
     ps.add_argument("--gens", default=",".join(GENERATORS))
     ps.add_argument("--hubs", default="500", help="hub moment ratings to try, N m")
+    ps.add_argument("--drives", default="", help="belt:arc_mm:teeth list, e.g. GT2-9:100:12,HTD5M-15:200:14 "
+                    "(default: the design's belt and arc with --teeth)")
+    ps.add_argument("--strokes", default="15", help="design swing amplitudes to try, deg (stops 5 deg further)")
+    ps.add_argument("--springs", default="1500", help="per-spring force limits to try, N")
+    ps.add_argument("--neck-up", dest="neck_up", type=int, default=0,
+                    help="also try neck tubes up to this many sizes heavier than the lightest that passes")
     ps.add_argument("--no-hold-rated", dest="hold_rated", action="store_false",
                     help="do not require the rating to be reached by 25 m/s and held to cut-out")
     ps.add_argument("--no-neck-auto", dest="neck_auto", action="store_false")
