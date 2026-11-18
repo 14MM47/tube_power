@@ -12,7 +12,7 @@ This file is the single source of truth for the 330-G mechanical layout. Every p
 |---|---|---|
 | **A** assembly (= **H**, head) | the yaw head | Origin on the hinge axis, midway between the two hinge bearings. **+X downwind** (the tail vane side; the hinge axle points into the wind along X). **+Z up**. **+Y** completes a right-handed set. Ground is Z = −3000. |
 | **S** swinging | the hub, neck and prism | A rotated by the swing angle θ about the X axis through the origin: p_A = R_x(θ) p_S. θ = 0 is upright. Design swing ±15°, rubber stops at ±20°. |
-| **P** pitching | the neck and prism | S rotated by the pitch angle β about the neck axis (X = 0, Y = 0, along Z_S): p_S = R_z(β) p_P. β = 0 is face-on (faces normal to X and Y), β = 45° is feathered. Internal stops at −3° and +48°. |
+| **P** pitching | the neck and prism | S rotated by the pitch angle β about the neck axis (X = 0, Y = 0, along Z_S): p_S = R_z(β) p_P. β = 0 is face-on (faces normal to X and Y), β = 45° is feathered. Internal stops at −3° and +48° (the feather-stop lug and blocks, section 3.3); the spring settles on the stop's buffer at about 45°. |
 
 All positions below are in **A at θ = 0, β = 0**. The "Frame" column says which frame the part moves with.
 
@@ -30,7 +30,7 @@ Poses the assembly must render and pass interference checks in: (θ, β) = (0, 0
      │   neck: CFRP 50/47, Z 275..850
  275   ┌┴┐ neck-foot insert / shoulder
  250 ┌─┴─┴─┐ pitch housing Ø110, Z 35..265 (cap 250..265)
-     │ M  W│ worm, worm wheel, clutch, torsion spring, encoder (P12/P13)
+     │ M  W│ worm, worm wheel, feather latch, torsion spring, encoder (P12/P13); latch solenoid outside on −X
   35 ├─────┴──────────── hub top plate Z 20..35 ───────────┤
    0 ●═══ stub axles, 6005-2RS bearings at X = ±150 in the cheeks
      lever X −71..−59 │ spring carriage, springs ±Y, rollers on reaction plates
@@ -67,14 +67,27 @@ Poses the assembly must render and pass interference checks in: (θ, β) = (0, 0
 | Hub top plate | Aluminium 6082-T6 | X ∈ [−135,135], Y ∈ [−60,60], Z ∈ [20,35]. Inside the pitch housing's footprint it has 2 × M3 tapped holes at (X ±32, Y 0) for **P12** and a Ø12 cable hole at (X 0, Y −40). |
 | Hub side plates (2) | Aluminium 6082-T6 | X ∈ [−135,−123] and [123,135], Y ∈ [−40,40], Z ∈ [−35,20]; bolted under the top plate. Stub-axle bore at (Y 0, Z 0). |
 | Stub axles (2) | Stainless steel 316 | Ø25 on the bearing seat, X ∈ [−172,−123] and [123,172]; Ø30 flange on the side plate's inner face, axial nut outboard of each bearing (X 164..170). The −X stub's end face (X = −172) has 2 × M3 tapped holes at Y = ±8 and carries the hinge magnet cap **P15** (a Ø24 disc, magnet on the axis). |
-| Pitch housing tube | Aluminium 6082-T6 | OD 110, ID 100, Z 35..250, axis Z through (0,0). Worm window cut through the +X wall, centred Y = 37, Z = 160, 36 wide (Y) × 30 tall (Z). |
+| Pitch housing tube | Aluminium 6082-T6 | OD 110, ID 100, Z 35..250, axis Z through (0,0). Worm window cut through the +X wall, centred Y = 37, Z = 160, 36 wide (Y) × 30 tall (Z). Latch: Ø10 hole for the stem guide bush at (Y 24, Z 222) on the −X side with a Ø17 spot face at X −49.5; 2 × M4 tapped at (φ 136°, Z 222) and (φ 168°, Z 222) for the solenoid bracket; **inspection port** centred φ −40°, 50 wide, Z 195..235, under a gasketed aluminium cover (3 mm, φ −75..−5°, Z 188..242). |
 | Pitch housing cap | Aluminium 6082-T6 | Ø110 × 15, Z 250..265; houses the upper bearing. |
 | Lower bearing seat | Aluminium 6082-T6 | Ring OD 100 (bonded/pinned in the tube), ID 55, Z 55..67; houses the lower bearing. |
 | Pitch bearings (2) | bought, bearing steel | 6907-2RS (35 × 55 × 10): upper Z 252..262, lower Z 56..66. |
-| Worm wheel | bought, bronze | Module 1, 60 teeth (pitch Ø60, OD 62), face 10, Z 155..165, rides on the clutch. |
+| Worm wheel | bought, bronze | Module 1, 60 teeth (pitch Ø60, OD 62), face 10, Z 155..165; hub OD 58, Z 165..171; bore 41; 6 × M4 tapped at R 25 (φ 0, 60, … 120°) through web and hub, plus 2 dowels, for the latch carrier. Turns freely on the wheel bush; coupled to the shaft only by the feather latch. **BLOCKING (latch.md section 10): this m1 set cannot carry the latch's hold torque (48.3 N·m dynamic, 121 N·m strength); the worm drive must be re-sized.** |
+| Wheel bush | bought, sintered bronze (oil-impregnated), flanged | 35 × 41, sleeve Z 155..179, flange Ø48 × 3 at Z 152..155. Thrust down onto a DIN 471-35 retaining ring in a shaft groove (Z 150.5..152), up against the latch collar (0.5 mm float). |
 | Worm | bought, steel | Module 1, single start, pitch Ø14 (OD 16), axis along X at (Y 37, Z 160), length 30 at X −15..15; shaft Ø5 continues +X through the window to the gearmotor coupling. |
-| EM clutch | bought | Ø60 × 25, Z 170..195, coaxial with the shaft; locks the worm wheel to the shaft when energised. |
-| Torsion spring | spring steel | Ø60 coil, Z 90..140, drives the shaft towards β = 45°. |
+| **Feather latch** (zero-hold, replaces the EM clutch; [latch.md](latch.md), revision B) | steel; see each row | Couples the wheel to the shaft with no power; a solenoid pulse releases it and the torsion spring feathers. Two stages: roller pawl, then roller sear (a toggle on a hard stop). Holds at every β from −3° to +48°; trippable at every one of them. Positions are (R, φ) in frame P at β = 0, φ from +X towards +Y. |
+| Latch carrier | 42CrMo4 QT | Disc OD 86, bore 41, Z 171..176, bolted to the wheel hub with 6 × M4 8.8 at R 25 plus 2 dowels. Wheel-stop lug R 43..46.8, 6 wide, at φ 270. |
+| Latch collar | 18CrNiMo7-6, case-hardened 58–62 HRC, case depth ≥ 0.6 | OD 61, Z 179.5..190.5, on the shaft with **two A 10 × 8 keys at ±Y**. **One slot** for the pawl roller with a **planar load flank 30° from radial**: contact at R 27.87, flank flat for 2.2 mm beyond the contact centre, 0.5 mm edge radius; 1 mm × 30° lead-in on the slot's trailing edge. |
+| Pawl | 42CrMo4 QT, nitrocarburised and post-oxidised | Pivot pin Ø8 (17-4PH H900, DU bush) at (R 34.9, φ 158.3), carried by the carrier and a strap (Z 200.5..204.5) to a post at (R 38, φ 108). Pivot boss Z 177..179 and 191..200 only (the pin passes the collar OD 0.4 mm). Nose cheeks Z 177..193 straddle the collar and carry the roller. Tail: arc R 38..47.5, Z 192..200, from φ 165, with a foot behind its end face; contact at (R 36, φ 262). Arms: roller 16 mm, sear contact 55.75 mm from the pivot. Opens 30° to release. Spring-loaded towards the collar. |
+| Pawl roller | bought NATV 5-PP, corrosion-protected | Ø16 × 12 on a Ø5 pin, Z 179..191; seated at (R 31, φ 131). Static rating ≥ 4.5 kN required. |
+| Sear | 42CrMo4 QT, nitrocarburised and post-oxidised | Plate Z 201.5..205.5; pivot on a hardened Ø6 pin (100Cr6) in an HK0609 needle bush at (R 28.7, φ 303.8); sear roller INA RSTO 5 (Ø16, Z 193.2..201, on a hardened Ø7 pin) 16 mm from the pivot bears on the tail's end face; arm via (R 38, φ −20) to a tab yoke X 34..41.5, Y ±4, Z 201.5..212.8 carrying a **tab roller** 683-2RS stainless (Ø7 at X 39.6, Y 0, Z 207.5..210.5). Reset spring 15 N·mm. |
+| Sear stop | 100Cr6, 60 HRC | Eccentric sleeve Ø6 on a shoulder screw from the top plate, bearing on the sear's roller arm 10 mm from its pivot. Sets the positive engagement to **0.15 ± 0.05 mm** and takes the closing moment (14 N at the strength load). Locked after setting. |
+| Latch top plate | 42CrMo4 QT | Sector R 22..30, Z 213..216, from φ −92 round past +X to the strap post; carries the sear pin, the sear stop and the post. |
+| Wheel-stop blocks (2) | 42CrMo4 QT | R 44.6..49.9, 8° wide, at φ 255 and 328 (frame S), Z 171..176, screwed to the housing. The lug lands on them at wheel angles −7° and +50°. |
+| Trip hook | 17-4PH H900, hook face nitrided | Frame S. Arc **concentric with the shaft**, R 44.6..46.6, φ −12..58°, Z 207..211: 1.5 ± 0.2 mm outside the tab roller at every latched β from −3° to +48°, pushing it radially. Riser R 44.6..48.5, φ 57..63°, Z 207..225; bridge X 17..25, Y 20..42, Z 219..225 with an M4 tapped hole for the stem. A separate part, fitted through the inspection port. |
+| Trip stem, guide and out-stop | 17-4PH H900; CuSn8 bush; A4 nuts | Frame S. Stem Ø6 with a D-flat along X at (Y 24, Z 222), X −68..17, M4 end into the bridge (thread-locked), M6 thread outside. **D-bore guide bush** (OD 10, X −49.5..−42, flange Ø16 × 2 on the spot face) pressed into the housing wall, with a greased lip seal: stops the hook turning (≤ ±2°). **M6 out-stop nut and lock nut** (X −57.5..−51.5) bear on the guide flange and set the rest position: hook gap 1.5 ± 0.2 mm, plunger gap 4.4 mm. **Return spring** (washer to the bracket front plate, X −67..−57.5) gives 1 N at the trip position. |
+| Latch solenoid | bought Guardian LT8x16-I-12D (section 6) | Frame S, outside the housing: body Ø25.4 × 50.8, axis along X at (Y 24, Z 222), X −120.8..−70, plunger towards +X, 4.4 mm out at rest. Held by an aluminium bracket: front plate X −70..−67, two flanges, and a 3 mm saddle on the tube OD (φ 122..178°, Z 207..237) bolted with 2 × M4. Under the weather cover **P25**. Axis along X so swing accelerations (Y, Z) act across the plunger. |
+| Feather stop | 42CrMo4 QT; PU 90 Shore A buffer | Z 229..238. Keyed collar on the shaft (frame P) with a lug R 24..46, 20° wide at φ 180. Blocks on the housing (frame S), R 36..50 at φ 150..167 (stop at β −3°) and φ 238..255 (stop at β +48°). PU buffer R 38..47, φ 232..238, Z 230..237 on the +48° block, met from β +42°. Buffer sized per V8 (h). |
+| Torsion spring | music wire EN 10270-1 DH | Ø7 wire on a mean Ø76 (OD 83), about 9.8 active turns, Z 70..145; drives the shaft towards β = 45°. 18.5 N·m at 45°, rate 0.17 N·m/° (23.6 at +15°, 26.2 at 0°, 26.7 at −3°); ±3 % as assembled with an indexed anchor, ±5 % acceptance. ASSUMED, see V8. |
 | Pitch gearmotor | bought (JGA25-370 class, 12 V) | Ø25 gearbox + Ø24.4 motor, axis along X at (Y 37, Z 160), X 62..135 (gearbox face at X = 62, 2 × M3 at ±8.5 mm in Y about the shaft, shaft Ø4 D-cut 12 long). Held by **P11**. |
 | Pitch encoder | bought AS5047P breakout (section 6) | Inside the housing under the shaft end; IC top face at Z = 42.5 (1.5 mm below the magnet face). Held by **P12** standing on the hub top plate (Z = 35); lead out through the Ø12 cable hole. |
 | Lever | Aluminium 6082-T6 flat bar | X ∈ [−71,−59], Y ∈ [−20,20], Z ∈ [−215,20]; bolted under the top plate with an angle. |
@@ -156,8 +169,25 @@ With θ ∈ [−20°, 20°] every S and P part must clear every A part by ≥ 3 
 | Generator can (X 48..76) / belt plane (X ≥ 79) | 3 mm |
 | Generator can / −X face of the arc rim | none needed: the can is at X ≤ 76 |
 | Striker / stop posts | touches the bumpers at θ = ±20° only |
-| Gearmotor (X 62..135, Z 160) / cheeks (Z ≤ 50) | ≥ 100 mm |
+| Gearmotor (X 62..135, Z 160) / cheeks (Z ≤ 50) | ≥ 75 mm (the geometry in this file gives 76.9 at θ = −20°; the earlier ≥ 100 could not be met) |
 | Prism corner (r = 233 when feathered) / anemometer mast (X −650) | > 400 mm |
+
+The feather latch has designed running gaps below 3 mm between the wheel, the shaft and frame S. `latch_check` (latch.md section 5) checks each pair at every latched and released angle against its own least gap:
+
+| Latch pair | Least gap | Drawn |
+|---|---|---|
+| Trip hook / tab roller | 1.0 mm | 1.5 ± 0.2 (1.0 with the hook turned 2° and 0.2 mm in) |
+| Trip hook / sear yoke | 2.0 mm | 2.4 at the hook tolerance |
+| Hook bridge / top plate and pin heads | 2.5 mm | 3.0 |
+| Carrier lug / wheel-stop blocks | contact at wheel −7° and +50° | 0.1 at the stops |
+| Pawl pivot pin / collar OD | 0.3 mm | 0.4 |
+| Wheel bush / collar (axial float); pawl nose cheeks / collar | 0.4 mm | 0.5 |
+| Sear, its roller, pin and stop / shaft and collar | 1.5 mm | 1.7 with the sear tripped |
+| Opened pawl tail / shaft | 2.0 mm | 2.4 |
+| Wheel and carrier bores / shaft | 2.5 mm | 3.0 |
+| Pawl tail / housing wall | 2.0 mm | 2.2 |
+| Opened pawl roller / housing wall | 2.5 mm | 2.9 |
+| Feather-stop lug / blocks and buffer | contact at β −3° and from +42° | — |
 
 ## 5. Printed parts
 
@@ -180,7 +210,7 @@ Printer: Bambu Lab X2D, 0.4 mm hardened nozzle, bed limit 246 × 246 × 260 mm (
 | P08 | `gen_magnet_holder` | ASA | 1 | A* | Diametric magnet on the generator's rear shaft end (*turns with the rotor; static pose for the assembly). |
 | P09 | `belt_guard` | ASA | 1 | A | Guard over the arc sweep and the pulley. |
 | P10 | `stepper_mount` | PAHT-CF | 1 | S | NEMA-17 on the lever bottom, coaxial with the lead screw. |
-| P11 | `pitch_gearmotor_bracket` | PAHT-CF | 1 | S | Saddle on the pitch housing over the worm window; clamps the gearmotor, holds a worm-shaft bearing (F695), seals the window. |
+| P11 | `pitch_gearmotor_bracket` | PAHT-CF | 1 | S | Saddle on the pitch housing over the worm window; clamps the gearmotor, holds a worm-shaft bearing (F695), seals the window. **Must not carry the worm's thrust** (up to 4 kN with the latch); see latch.md section 10. |
 | P12 | `pitch_encoder_mount` | ASA | 1 | S | Stand on the hub top plate inside the pitch housing. |
 | P13 | `pitch_magnet_holder` | ASA | 1 | P | Pressed into the neck-foot shaft's bottom end. |
 | P14 | `hinge_encoder_mount` | ASA | 1 | A | Bracket and cover on the −X bearing retainer. |
@@ -194,6 +224,7 @@ Printer: Bambu Lab X2D, 0.4 mm hardened nozzle, bed limit 246 × 246 × 260 mm (
 | P22 | `enclosure_gasket` | TPU 95A | 1 | A | Flat gasket in the lid groove. |
 | P23 | `slip_ring_holder` | ASA | 1 | A | Slip-ring stator holder inside the post bore. |
 | P24 | `cable_clip` | ASA | 3 | A | Cable saddle on a tube, held by a cable tie (default Ø25). |
+| P25 | `latch_solenoid_cover` | ASA | 1 | S | Weather cover over the latch solenoid, its bracket and the trip stem on the −X side of the pitch housing (envelope X −126..−48, Y −2..50, Z 202..242), gasketed to the tube; cable gland underneath. Not in any load path. |
 
 Printed-material notes:
 - **ASA**: UV-stable, outdoor parts and covers. Needs the X2D's heated chamber.
@@ -210,6 +241,8 @@ Printed-material notes:
 | NEMA-17 stepper | 42.3 square, 48 long, M3 on a 31 mm square, Ø22 × 2 pilot, Ø5 shaft. |
 | JGA25-370 gearmotor | Gearbox Ø25 × 21, motor Ø24.4 × 31, face with 2 × M3 at ±8.5 mm, shaft Ø4 D × 12. |
 | F695 bearing | 5 × 13 × 4 with Ø15 × 1 flange. |
+| Latch solenoid | Guardian Electric LT8x16-I-12D (part A420-064851-00), long-life DC tubular pull solenoid: Ø25.4 × 50.8 (2 × 1 in), plunger Ø11.1, stainless guide tube, PTFE-coated plunger, 10 million cycles; 12 V, 6.2 Ω ±5 %, 24.4 W (25 % duty). Pull force at 12 V, 20 °C (datasheet, 25 % row): 22.2 N at 1.27 mm, 15.3 N at 3.18 mm, 9.7 N at 6.35 mm. Source: Guardian datasheet LT8x16 (guardian-electric.com; also farnell.com/datasheets/2722902.pdf); stocked by Farnell/element14 and Newark. |
+| Latch rollers and bearings | NATV 5-PP track roller, corrosion-protected (5 × 16 × 12, C0 ≥ 4.5 kN); INA RSTO 5 yoke-type needle track roller (Fw 7 × 16 × 7.8, C0 ≈ 3.6 kN); HK0609 drawn-cup needle bush (6 × 10 × 9, C0 ≈ 1.9 kN); 683-2RS stainless (3 × 7 × 3); DU bush 0810; sintered-bronze flanged bush 35 × 41 × 24 with Ø48 flange; DIN 471-35 ring. |
 | 6005-2RS | 25 × 47 × 12. |
 | 6907-2RS | 35 × 55 × 10. |
 | Slip ring | Capsule body Ø22 × 35, flange Ø44 × 3 with 3 × Ø3.4 on a Ø34 PCD, rotor bore none (rotor leads out the top), stator leads out the bottom. |
@@ -224,7 +257,8 @@ The board is designed in `14MM47/pcb`, `hardware/lantern-330g-controller/`.
 - Outline **130 × 100 mm**, 1.6 mm, 4-layer. Board-local origin at one corner, x along the 130 mm edge.
 - Mounting holes: 4 × Ø3.2 (M3) at (4,4), (126,4), (4,96), (126,96), keep-out Ø7.
 - **Power connectors on the y = 0 edge** (battery, generator, dump resistor), facing the enclosure's −Y wall.
-- **Signal connectors on the y = 100 edge** (encoders, stepper, pitch motor, clutch, limit switches, anemometer, temperature, RS-485), facing the +Y wall.
+- **Signal connectors on the y = 100 edge** (encoders, stepper, pitch motor, latch solenoid, limit switches, anemometer, temperature, RS-485), facing the +Y wall.
+- **Latch solenoid cable:** a 0.5 mm² pair from the solenoid (frame S, −X side of the pitch housing at Z 222) down the housing under clips, through the hub with the gearmotor and encoder cables, across the hinge in a service loop, into an M16 gland on the +Y wall. The loop, with the driver's MOSFET, sense resistor and connectors, is at most 0.2 Ω. The drive requirement is in latch.md section 9 (current-regulated 1.94 A, 100 ms).
 - USB-C and microSD on the x = 130 edge (reached with the lid off).
 - Components on the top side only, ≤ 25 mm tall. Nothing on the bottom except test pads.
 - In the enclosure: board on 6 mm standoffs, board bottom at Z = −269 (floor top Z −275), board centre at (X −270, Y 0), board x along assembly +X, board y along assembly +Y.
@@ -252,7 +286,7 @@ The board is designed in `14MM47/pcb`, `hardware/lantern-330g-controller/`.
 
 ## 9. 330-GH differences (not modelled)
 
-800 mm neck; hub and post head for 1,200 N·m; two-position feather (electromagnetic latch, torsion spring to a 45° stop) instead of the worm, wheel, gearmotor and clutch; ±30° stops and ±25° swing; ~51 N/mm die springs; HTD 8M 20 mm belt on a 275 mm arc with a 22-tooth pulley; direct-drive hub motor. P03, P04, P05, P06, P09, P11 and P16 would be redesigned; the rest carry over.
+800 mm neck; hub and post head for 1,200 N·m; two-position feather (electromagnetic latch, torsion spring to a 45° stop) instead of the worm, wheel, gearmotor and feather latch; ±30° stops and ±25° swing; ~51 N/mm die springs; HTD 8M 20 mm belt on a 275 mm arc with a 22-tooth pulley; direct-drive hub motor. P03, P04, P05, P06, P09, P11 and P16 would be redesigned; the rest carry over.
 
 ## 10. ASSUMED / VERIFY
 
@@ -263,6 +297,7 @@ The board is designed in `14MM47/pcb`, `hardware/lantern-330g-controller/`.
 | V3 | 8108 dimensions, shaft and bolt pattern; 12-tooth pulley fit | Typical class values only. |
 | V4 | Spring OD 25, free length, preload | Rate (30.8 N/mm) and force (≤ 1.5 kN) are from the calculator; the geometry is not. |
 | V5 | Idler size and positions | Set by P06's author against the clearances in section 4. |
-| V6 | Encoder breakout, slip ring, anemometer, gearmotor, clutch dimensions | Generic parts. |
+| V6 | Encoder breakout, slip ring, anemometer, gearmotor, latch solenoid dimensions (mounting bushing, plunger length, lead exit) | Generic parts. |
 | V7 | End-stop energy: the ±20° stops may see ~60 J in a fault | TPU bumpers are for the prototype; a production stop needs a sized rubber buffer. |
-| V8 | Clutch hold power (power-to-engage, needed whenever the prism is not feathered) | Probably several watts; see the controller's peak-and-hold driver and the README note. |
+| V8 | Feather latch (latch.md section 8, revision B): (a) torsion spring 18.5 N·m at 45°, 0.17 N·m/°, Ø7 × mean Ø76, fatigue at ~5,000 parks a year, fit in Z 70..145; (b) aerodynamic pitch moment, CM 0.10 (13.5 N·m at 45 m/s), on the static rig, and the feather requirement spring ≥ 1.25 × moment at every β; (c) trip force: radial push at the tab roller ≤ 3.8 N at the dynamic load, and the pull at the solenoid stem ≤ 7.8 N at any β, with the guide and plunger fitted; (d) solenoid force-stroke at 1.90 A over 2.4–3.1 mm gap, and its pull-in time; (e) static ratings NATV 5-PP ≥ 4.5 kN, RSTO 5 ≈ 3.6 kN, HK0609 ≈ 1.9 kN, the NATV crown radius, and the collar flank at 1,447 MPa dynamic; (f) sear engagement 0.15 ± 0.05 mm as set by the stop, stable under vibration; (g) worm self-locking under galloping vibration (part of the blocking pitch-drive redesign); (h) feather-stop buffer for 31 J (storm trip from −3°) and ~2 J × 5,000 parks a year (drawn pad is a placeholder); (i) 1:1 prototype of the pawl (30° opening), sear (31.5° swing), springs, slot lead-in, pawl drop time < 50 ms, grease retention, hook through the port; (j) guide-bush rotational play ≤ ±2° and seal friction; (k) hub mass with the latch and the Ø7 spring | Concept geometry from the design note; friction, ratings and spring values are catalogue or assumed numbers. |
+| V9 | **BLOCKING:** pitch drive (worm set, worm thrust bearing, gearmotor) re-sized for the latch hold torque: ≥ 48.3 N·m fatigue and 121 N·m no-yield at the wheel, thrust in a metal seat, ≥ 1.1 N·m at the worm (latch.md section 10) | The m1 × z60 bronze set and the JGA25-370 are far below it. |

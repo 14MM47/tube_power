@@ -94,10 +94,68 @@ WORM_OD = 16.0
 WORM_AXIS_YZ = (37.0, 160.0)
 WORM_X = (-15.0, 15.0)
 WORM_SHAFT_D = 5.0
-CLUTCH_D = 60.0
-CLUTCH_Z = (170.0, 195.0)
-TORSION_SPRING_D = 60.0
-TORSION_SPRING_Z = (90.0, 140.0)
+# Zero-hold feather latch (SPEC 3.3; design note ../latch.md, revision B after the 17 Nov 2026
+# review). Polar positions are (R, phi) in frame P at beta = 0 for parts on the wheel or the shaft,
+# phi from +X towards +Y.
+WHEEL_BORE = 41.0                                # worm wheel bore, on the bush
+WHEEL_BUSH = (35.0, 41.0, (155.0, 179.0))        # sintered bronze flanged bush: ID, OD, sleeve Z
+WHEEL_BUSH_FLANGE = (48.0, (152.0, 155.0))       # flange OD, Z (thrust face on the retaining ring)
+RETAINING_RING = (41.0, (150.5, 152.0))          # DIN 471-35 as drawn: OD, Z
+WHEEL_JOINT = (6, 25.0, 3.3, 4.5)                # carrier to wheel: n x M4 at R, tap drill in the wheel, carrier hole
+LATCH_CARRIER = (86.0, (171.0, 176.0))           # steel disc bolted to the wheel hub: OD, Z
+CARRIER_LUG = (43.0, 46.8, 270.0, 6.0)           # wheel-stop lug: R in, R out, phi, width
+WHEEL_STOP_BLOCKS = (44.6, 49.9, (255.0, 328.0), 8.0, (171.0, 176.0))  # R in, R out, phi each, width deg, Z
+LATCH_COLLAR = (61.0, (179.5, 190.5))            # keyed (2 keys, +/-Y) to the shaft: OD, Z
+LATCH_ROLLER = (16.0, 5.0, (179.0, 191.0), (31.0, 131.0))  # NATV 5 track roller: OD, pin, Z, (R, phi) seated
+LATCH_NOTCH_FLANK = 30.0                         # planar load flank, degrees from radial
+LATCH_SLOT = (16.6, 8.6)                         # slot width across the flanks, bottom clearance below the roller
+PAWL_ARM_A = 16.0                                # pivot ahead of the roller along the tangent (mm)
+PAWL_PIN_D = 8.0
+PAWL_NOSE_Z = (177.0, 193.0)                     # nose cheeks straddle the collar and roller
+PAWL_NOSE = (22.0, 37.0, (122.0, 146.0))         # nose sector R in, R out, phi range
+PAWL_TAIL_Z = (192.0, 200.0)                     # tail arm runs above the collar
+PAWL_TAIL = (38.0, 47.5, 262.0, 36.0)            # tail sector R in, R out, end phi; sear contact radius
+PAWL_TAIL_START = 165.0                          # tail sector start phi (beyond the pivot, clear of the housing when open)
+PAWL_FOOT = (4.0, 10.0)                          # foot behind the end face: depth along v, extent to the outer side
+PAWL_BOSS_GAP_Z = (179.0, 191.0)                 # pivot boss omitted beside the collar (pin passes its OD 0.4 mm)
+PAWL_TAIL_TRIM = 1.5                             # end face kept to 1.5 mm on the closing side of the contact
+PAWL_STRAP = ((38.0, 108.0), (200.5, 204.5))     # strap post (R, phi), strap Z
+SEAR_ROLLER = (16.0, 7.0, (193.2, 201.0))        # INA RSTO 5 needle track roller: OD, hardened pin Ø (Fw), Z
+SEAR_L2 = 16.0                                   # sear pivot to sear-roller centre
+SEAR_Z = (201.5, 205.5)
+SEAR_PIVOT = (6.0, 14.0, (201.5, 210.5))         # hardened pin Ø, HK0609 needle-bush boss Ø, boss Z
+SEAR_ELBOW = (38.0, -20.0)                       # (R, phi)
+SEAR_TAB = ((34.0, 41.5), (-4.0, 4.0), (201.5, 212.8))   # X, Y, Z (yoke for the tab roller)
+SEAR_TAB_SLOT = ((35.6, 42.0), (206.8, 211.2))   # X, Z of the yoke slot
+TAB_ROLLER = (7.0, 3.0, (39.6, 0.0), (207.5, 210.5))   # 683-2RS stainless: OD, pin, (X, Y), Z
+SEAR_STOP = (10.0, 6.0, 0.05, (201.5, 213.0))    # arm from the sear pivot, eccentric sleeve Ø, gap drawn, Z
+LATCH_TOP_PLATE = (22.0, 30.0, (213.0, 216.0), -92.0)    # carries the sear pin and stop: R in, R out, Z, start phi
+TRIP_HOOK = (44.6, 46.6, (-12.0, 58.0), (207.0, 211.0))  # frame S: R in, R out, phi range, Z
+TRIP_RISER = (44.6, 48.5, (57.0, 63.0), (207.0, 225.0))  # frame S: R, phi, Z (joins the arc end; beyond every latched tab angle, max 53.5)
+TRIP_BRIDGE = ((17.0, 25.0), (20.0, 42.0), (219.0, 225.0))  # frame S: X, Y, Z (stem's M4 end threads into it)
+TRIP_STEM = (6.0, 24.0, 222.0, (-68.0, 17.0))    # Ø (D-flat), Y, Z, X range of the Ø6 (M4 end X 17..25 in the bridge)
+STEM_GUIDE = (10.0, (-49.5, -42.0), 16.0, 2.0)   # D-bore bronze guide bush: OD, sleeve X, flange Ø, flange t
+HOOK_ROT_TOL = 2.0                               # deg, hook turn about the stem axis the D-flat guide allows (checked)
+STEM_NUTS_X = (-57.5, -51.5)                     # out-stop nut + lock nut (M6), against the guide flange
+RETURN_SPRING_X = (-66.5, -57.5)                 # compression spring, bracket front plate to the nuts
+LATCH_SOLENOID = (25.4, 50.8, (-120.8, -70.0), 11.1, 4.4)  # LT8x16: Ø, length, X, plunger Ø, plunger out (rest gap)
+SOLENOID_BRACKET_X = (-70.0, -67.0)              # front plate against the solenoid's mounting face
+SOLENOID_SADDLE = ((122.0, 178.0), (207.0, 237.0), 3.0)   # phi range, Z, thickness on the tube OD
+HOUSING_STEM_HOLE_D = 10.0                       # for the guide bush
+INSPECTION_PORT = (-40.0, 50.0, (195.0, 235.0))  # housing wall: centre phi, chord width, Z
+PORT_COVER = ((-75.0, -5.0), (188.0, 242.0), 3.0)  # gasketed cover: phi range, Z, thickness
+SADDLE_BOLTS = ((136.0, 222.0), (168.0, 222.0))     # (phi, Z): 2 x M4 through the bracket saddle into the tube wall
+STEM_SPOT_FACE = (17.0, -49.5)                    # Ø, X: flat on the tube for the guide-bush flange and the nuts
+P25_ENVELOPE = ((-126.0, -48.0), (-2.0, 50.0), (202.0, 242.0), 3.0)  # SPEC 5 P25 placeholder: X, Y, Z, wall
+FEATHER_STOP_Z = (229.0, 238.0)                  # stop collar on the shaft and stop blocks on the housing
+FEATHER_LUG = (24.0, 46.0, 180.0, 20.0)          # lug R in, R out, phi (frame P), width deg (10 mm radial overlap with the blocks)
+FEATHER_BLOCKS = (36.0, 50.0, ((150.0, 167.0), (238.0, 255.0)))  # R, phi ranges (frame S): stops at -3 and +48
+FEATHER_BUFFER = (38.0, 47.0, (232.0, 238.0), (230.0, 237.0))    # PU buffer on the +48 block: R, phi, Z (contact 42)
+PAWL_OPEN_DEG = 30.0                             # pawl opening to lift the roller clear of the OD 61 collar
+SEAR_TRIP_DEG = 31.5                             # sear swing that lets the tail pass the sear roller
+TORSION_SPRING_D = 83.0                          # OD: Ø7 wire on a mean Ø76
+TORSION_SPRING_WIRE = 7.0
+TORSION_SPRING_Z = (70.0, 145.0)
 GEARMOTOR_AXIS_YZ = (37.0, 160.0)
 GEARMOTOR_X = (62.0, 135.0)
 GEARBOX_D = 25.0
@@ -317,7 +375,7 @@ CAP_LIP_ID = 47.0                                 # A4 cap and seat lips
 CAP_TOP_BORE_D = 64.0
 SEAT_LIP_ID = 47.0
 SHAFT_SPACER = (43.0, 3.0)                        # A4 OD, length (Z 262..265)
-WHEEL_HUB = (40.0, 5.0)                           # A5 worm-wheel hub to the clutch
+WHEEL_HUB = (58.0, 6.0)                           # A5 worm-wheel hub to the latch carrier
 LEADSCREW_JOURNAL_TOP_Z = 18.0                    # A6 machined ends of the screw
 LEADSCREW_BOTTOM_Z = -193.0                       # A6
 KFL08 = (48.0, 27.0, 37.0, 22.0)                  # A7 length, width, bolt pitch, boss D
@@ -331,7 +389,7 @@ STEPPER_CHAMFER = 4.5                             # A9 NEMA-17 body corner chamf
 COUPLER_D = 19.0                                  # A9
 GEARMOTOR_TAIL_D = 22.0                           # A10 rear encoder/terminal cap
 COUPLING_D = 10.0                                 # A10 worm-shaft to gearmotor coupling
-COUPLING_X = (43.0, 61.0)
+COUPLING_X = (43.0, 56.0)
 WORM_SHAFT_X = (-25.0, 49.0)
 IDLER_X = (80.2, 89.8)                            # A11 contact width between flanges
 IDLER_FLANGE_T = 1.0
@@ -359,12 +417,12 @@ ASSUMED = {
     "A2": "Stub-axle flange 4 thick (X 119..123 on the -X stub); axial nut is a KM5 round nut, OD 38.",
     "A3": "Bearings drawn as an inner and an outer ring only (6005: 25/32 and 40/47; 6907: 35/40.5 and 49.5/55; 32010: 50/60 and 68/80).",
     "A4": "Pitch-housing cap: lip ID 47 under the upper bearing (Z 250..252), bearing bore 55 (Z 252..262), clearance bore 64 above (Z 262..265); lower seat lip ID 47 at Z 55..56; shaft spacer OD 43 at Z 262..265 carries the shoulder load onto the upper inner ring.",
-    "A5": "Worm wheel has a hub OD 40 from its top face (Z 165) to the clutch (Z 170); bore 36 so it can turn on the shaft when the clutch is off.",
+    "A5": "Worm wheel has a hub OD 58 from its top face (Z 165) to the latch carrier (Z 171), bored 41 for the flanged bronze bush it turns on; 6 x M4 tapped at R 25 (16 mm of thread through web and hub) for the carrier, plus 2 dowels.",
     "A6": "Lead screw: SPEC Z -185..5 is the threaded length; machined Ø8 ends continue down into the coupler (to Z -193) and up through the KFL08 (to Z 18).",
     "A7": "KFL08 drawn as a 48 x 27 x 5 two-bolt flange (37 mm bolt pitch, long axis along Y) with a Ø22 boss, Z 8..20.",
     "A8": "Spring wire Ø4, mean coil Ø21, ~9 active coils (~31 N/mm); spring rod Ø10 fixed in the carriage from |Y| 25 to 105; each fork slides on its rod on a Ø14 x 60 sleeve; fork bridge 18 behind the roller axle. Both springs are preloaded so both rollers stay on their plates at every pose (the roller positions are solved per pose).",
     "A9": "NEMA-17 body corners chamfered 4.5; flexible coupler Ø19.",
-    "A10": "Gearmotor: gearbox X 62..83, motor X 83..114, rear encoder/terminal cap Ø22 X 114..135; worm shaft Ø5 X -25..49; gearmotor shaft Ø4 X 50..62; coupling Ø10 X 43..61.",
+    "A10": "Gearmotor: gearbox X 62..83, motor X 83..114, rear encoder/terminal cap Ø22 X 114..135; worm shaft Ø5 X -25..49; gearmotor shaft Ø4 X 50..62; coupling Ø10 X 43..56 (as P11 is built).",
     "A11": "Idlers: contact Ø13 over X 80.2..89.8, flanges Ø18 x 1 outside that, on Ø5 bolts X 77.5..97 into P06.",
     "A12": "Anemometer boom and mast both run to P18's centre in the SPEC, which would make them intersect; each is modelled stopping 15 mm short, inside P18's sockets (boom X -635..-200, mast Z -245..150).",
     "A13": "Anemometer body Z 180..260 (spigot Z 120..180, entering the mast bore through P19); cups Ø50 on Ø180 at Z 260.",

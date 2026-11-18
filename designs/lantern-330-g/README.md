@@ -28,7 +28,7 @@ Related documents:
 | Neck, hub | 600 mm, 50 × 47 mm carbon; pitch drive at the neck foot; hub built for 800 N·m on ball bearings | 800 mm, 50 × 47 mm; two-position feather (face-on or 45°); hub 1,200 N·m | 800 mm, 35 × 32 mm; hub 150 N·m | 600 mm, 35 × 32 mm; hub 350 N·m |
 | Swinging mass / mass ratio | 2.2 kg / 10 | 2.4 kg / 12 | 0.63 kg / 5.5 | 0.86 kg / 7.7 |
 | Generator and drive | 8108-size pancake outrunner (~100 W class), GT2 9 mm belt, 26:1; swing ±15° | Direct-drive e-bike hub motor (~500 W class), HTD 8M 20 mm belt, 9.8:1; swing ±25°; 3 kN springs | 5208 gimbal motor, 26:1 | same |
-| **Generates** | **2.5–40 m/s without a gap** | **6.1–40 m/s without a gap** | 1.6–8 m/s as designed; 1.8–10.8 m/s kept generating | 1.6–8 m/s; 1.8–11 m/s kept generating |
+| **Generates** | **2.5–40 m/s without a gap** (the swing starts at 2.5 m/s; it starts generating at ~4 m/s net of the controller's 0.2 W, section 6) | **6.1–40 m/s without a gap** | 1.6–8 m/s as designed; 1.8–10.8 m/s kept generating | 1.6–8 m/s; 1.8–11 m/s kept generating |
 | Electrical at 4.5 m/s | 0.40 W | 0 (below cut-in) | 2.0 W | 1.8 W |
 | Electrical at 10 m/s | 5.5 W | 4.1 W | 20.5 W (kept generating) | 20.0 W (kept generating) |
 | Electrical at 15–40 m/s | 18 W at 15 m/s, then **20 W held to 40 m/s** | 18 W at 15, 47 at 20, 93 at 25, 163 at 30, **384 W at 40 m/s**; **152 W average** | nothing (braked) | nothing (braked) |
@@ -37,6 +37,16 @@ Related documents:
 | Yearly energy, 6.5 m/s-mean site | **19.0 kWh** (low case 9.5) | 14.4 | 9.5; 24.3 | 8.9; 24.1 |
 | Yearly energy, 7.5 m/s-mean site | **27.8 kWh** | 25.2 | 8.6; 25.3 | 8.1; 25.5 |
 | Yearly energy, 9 m/s-mean site | 42.0 kWh | **48.9** | 7.2; 24.1 | — |
+
+**These yearly figures are the generator's output and exclude the controller's own draw.** The machine starts and parks on net power (section 6), so a running draw while generating costs energy and also raises the wind it is worth starting in. From [`tools/net_energy.py`](../../tools/net_energy.py) (same Rayleigh method and 80 % factor):
+
+| Running draw while generating | 0 | 0.2 W | 0.5 W | 1 W | 2 W |
+|---|---|---|---|---|---|
+| Break-even wind | — | 4.0 m/s | 5.1 m/s | 6.25 m/s | 7.8 m/s |
+| Net yearly energy, 4.5 m/s-mean site | 6.2 kWh | 5.0 | 3.9 | 2.6 | 1.3 |
+| Net yearly energy, 6.5 m/s-mean site | 19.0 kWh | 17.6 | 15.8 | 13.4 | 9.9 |
+
+Parked, the controller's ~4 mW costs under 0.02 kWh a year. A power-to-engage clutch held at 2 W through calm periods alone would cost about 2.5 kWh a year at a 4.5 m/s site, and far more if it were also held while generating (2 W for the 86 % of the year it generates is about 15 kWh). A restart costs about 0.03–0.05 Wh.
 
 **What this says, on the model's central figures:**
 
@@ -106,7 +116,7 @@ The same curves, with a "Compare with" overlay, are on the [Lantern Design Grid 
           └───────┼───────┘
                   │          neck: 600 mm, 50 × 47 mm carbon tube
              ┌────┴────┐     pitch drive: neck foot turns in two bearings,
-             │  PITCH  │     worm gearmotor; spring + clutch feather it on power loss
+             │  PITCH  │     worm gearmotor; a zero-hold latch couples it; released, a spring feathers it
         ┌────┴────●────┴────┐ hinge: 25 mm axle INTO the wind, two 6005-2RS bearings
         │  ◄▮▮══╪══▮▮►      │ 300 mm apart; hub built for 800 N·m
         │       │           │ spring carriage 15–140 mm below hinge (0.12–4 Hz)
@@ -131,7 +141,7 @@ From [calculator-output/report-330G.md](calculator-output/report-330G.md).
 | End plates, each | 660 mm square, same panel | 0.20 kg |
 | Bottom spider | Neck socket in the bottom bulkhead | 0.02 kg |
 | Neck | 50 × 47 mm roll-wrapped carbon tube, 600 mm | 0.21 kg |
-| Hub assembly | 25 mm axle, two bearings, spring lever and carriage, belt arc, pitch bearings, gearmotor, return spring and clutch | ~0.87 kg |
+| Hub assembly | 25 mm axle, two bearings, spring lever and carriage, belt arc, pitch bearings, gearmotor, return spring and zero-hold feather latch with its trip solenoid | ~0.87 kg as calculated (**VERIFY**: the calculator's 0.30 kg for the pitch drive predates the latch; the latch hardware and the Ø7 feather spring add about 1.3 kg (0.9 kg of latch parts in the CAD BOM, and 0.72 kg of spring against about 0.29 kg before), see [cad/latch.md](cad/latch.md) section 10) |
 | **Total swinging** | | **2.22 kg** |
 
 | Inertia about the hinge (kg·m²) | |
@@ -149,11 +159,14 @@ From [calculator-output/report-330G.md](calculator-output/report-330G.md).
 
 | Wind | Mode | What happens |
 |---|---|---|
-| Below ~2.5 m/s | Idle | Face-on, generator open. Too little wind to beat bearing and generator drag |
-| 2.5–15.5 m/s | **Generating** | Kick-start at onset. Generator load tracks maximum power. Carriage moves to keep the swing at ±15°: 0.37 Hz at 3 m/s, 2 Hz at 15 m/s. Output 0.06 W at 3 m/s, 0.40 W at 4.5, 5.5 W at 10, 18 W at 15 |
+| Calm, or net output negative | **Parked** | Feathered to 45° by the torsion spring (the pitch latch released), generator shorted by the normally-on brake, controller asleep: the MCU in Stop mode, woken by anemometer pulses (about 4 mW for the board). Nothing is powered to hold this state |
+| Start | Restart | When the 1–2 min mean wind is above break-even with the controller's running draw (about 4 m/s at 0.2 W) **and** the battery is above its restart reserve: the gearmotor re-engages the latch, pitches to 0°, the brake opens and the generator kick-starts the swing. A restart costs about 0.03–0.05 Wh. Loads are shed at a higher battery level than the restart reserve, so the controller can always restart |
+| ~4–15.5 m/s | **Generating** | Generator load tracks maximum power (the swing itself starts from 2.5 m/s). Carriage moves to keep the swing at ±15°: 0.37 Hz at 3 m/s, 2 Hz at 15 m/s. Output 0.06 W at 3 m/s, 0.40 W at 4.5, 5.5 W at 10, 18 W at 15. It parks again after about 5 min of negative net output |
 | 15.5–40 m/s | **Rated (pitch-regulated)** | Pitch rises from 0 to 10° to hold 20 W, with the generator near maximum-power load. Swing falls from ±15° to ±9° as a steady lean (up to 6°) takes up part of the stroke; frequency rises to 3.7 Hz |
-| Above 40 m/s, or on fault | **Feathered** | Pitch to 45° and generator shorted. The spring and clutch do this without power |
+| Above 40 m/s, or on fault | **Feathered** | Pitch to 45° and generator shorted. A solenoid pulse releases the zero-hold latch and the spring feathers the prism; the controller fires it from a stored-energy reservoir when the keep-alive (SAFE_OK) drops or the supply is lost, so this needs no power. Planned parks drive to 40° with the worm first, so the spring only moves the last 5°; the hook reaches the latch at every pitch angle, so every park also tests the trip, first with a reduced-current pulse |
 | To 46.7 m/s | Survive | Limited by the end plates' gust lift; the hub is at 47 m/s |
+
+The pitch latch replaced a power-to-engage clutch. Held at 2 W through calm periods alone, that clutch would cost about 2.5 kWh a year at a 4.5 m/s site, and much more if also held while generating. The latch design is in [cad/latch.md](cad/latch.md). **Open, blocking a build:** the module-1 worm set and the JGA25 gearmotor cannot carry the spring and latch torque; the pitch drive must be re-sized (latch.md section 10).
 
 From [calculator-output/envelope-330G.md](calculator-output/envelope-330G.md) (utilisation = load ÷ allowable):
 
@@ -203,6 +216,7 @@ The post needs proper engineering: for example a 114 mm × 6 mm steel tube with 
 - **Electronics:**
   - Three-phase active bridge (rectifies, and motors for the kick-start), with maximum-power tracking into a 24 V LiFePO₄ battery.
   - Normally-closed brake.
+  - Pitch-latch trip: a 12 V solenoid driven at a regulated 1.94 A for 100 ms from a stored-energy reservoir (≥ 60 mF at 27 V for three pulses), fired on command, on loss of the keep-alive (SAFE_OK) or on loss of supply; plus a 1.33 A margin-test pulse at each planned park (cad/latch.md section 9).
   - Pitch motor driver and encoder, hinge angle encoder (swing amplitude is the carriage loop's input), anemometer, temperature sensor, logging.
   - Rate everything to at least 60 V.
 
@@ -367,6 +381,14 @@ python3 tools/galloping_calc.py sweep --hubs 500,800 --csv grid.csv   # grid sea
 
 ```bash
 python3 tools/galloping_calc.py report --config GH               # 330-GH, the most power from 15 to 40 m/s
+```
+
+```bash
+python3 tools/net_energy.py --sites 4.5,6.5 --run 0,0.2,0.5,1,2 --idle 0,0.004,2   # yearly energy net of the controller's draw
+```
+
+```bash
+python3 tools/feather_latch_calc.py                              # pitch latch: load case, trip force, solenoid sizing
 ```
 
 ```bash

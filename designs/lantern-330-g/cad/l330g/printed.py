@@ -1,4 +1,4 @@
-"""Loader for the printed parts (P01..P24) from the 3dprint checkout.
+"""Loader for the printed parts (P01..P25) from the 3dprint checkout.
 
 For every ``parts/lantern330g/<module>.py`` whose name does not start with
 ``_``, the loader imports the module, takes the part as built by ``part()``
@@ -62,6 +62,7 @@ SPEC_TABLE = {
     "P22": ("enclosure_gasket", "tpu", 1, "A"),
     "P23": ("slip_ring_holder", "asa", 1, "A"),
     "P24": ("cable_clip", "asa", 3, "A"),
+    "P25": ("latch_solenoid_cover", "asa", 1, "S"),
 }
 MODULE_TO_P = {v[0]: k for k, v in SPEC_TABLE.items()}
 
@@ -71,6 +72,7 @@ GROUPS = {
     "P13": "pitch", "P14": "hinge", "P15": "hinge", "P16": "hinge", "P17": "tail",
     "P18": "anemometer", "P19": "anemometer", "P20": "electrical", "P21": "electrical",
     "P22": "electrical", "P23": "yaw", "P24": "anemometer",
+    "P25": "pitch",
 }
 
 
@@ -220,6 +222,10 @@ def _placeholder_shapes(pid: str) -> list:
         z = L.CABLE_CLIP_MAST_Z
         out.append(box((mx + r, mx + r + 7), (my - 8, my + 8), (z - 8, z + 8)))
         return out
+    if pid == "P25":
+        (x0, x1), (y0, y1), (z0, z1), w = L.P25_ENVELOPE
+        shell = box((x0, x1), (y0, y1), (z0, z1)) - box((x0 + w, x1 + 1), (y0 + w, y1 - w), (z0 + w, z1 - w))
+        return [shell - cyl_z(L.PITCH_HOUSING_OD, (z0 - 1, z1 + 1))]
     raise KeyError(pid)
 
 

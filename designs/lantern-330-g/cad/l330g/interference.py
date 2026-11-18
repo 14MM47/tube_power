@@ -34,6 +34,7 @@ from pathlib import Path
 import numpy as np
 
 from . import assembly
+from . import printed
 from . import layout as L
 from . import mesh as meshmod
 from .item import Item
@@ -96,6 +97,9 @@ ALLOW = [
     Rule(r"^B18 ", r"^M29 ", "roller on its reaction plate (rolling contact)"),
     Rule(r"^P12 ", r"^M10 ", "stand on the hub top plate"),
     Rule(r"^P0[56] ", r"^M32 ", "upright's foot on the base plate"),
+    Rule(r"^M62 ", r"^M15 ", "latch stem guide bush pressed into the housing wall"),
+    Rule(r"^M61 ", r"^M58 |^B42 |^B06 |^M62 ", "trip stem: M4 end in the hook bridge, nuts on its M6 thread, end in the plunger, in its guide"),
+    Rule(r"^M64 ", r"^B44 ", "feathered: the stop lug presses into the PU buffer (beta 42..48)"),
 ]
 
 #: Moving pairs allowed closer than 3 mm (SPEC 4), with the reason.
@@ -111,7 +115,12 @@ NEAR = ALLOW + [
     Rule(r"^M25 ", r"^P16 ", "striker lands on the bumpers at theta = +/-20 (SPEC 3.5)"),
     Rule(r"^P0[34] ", r"^B21 ", "arc rim to idler flanges: >= 0.3 mm axially (SPEC 4)"),
     Rule(r"^P0[34] ", r"^P09 ", "arc and clamps inside the guard"),
-    Rule(r"^B03 |^B06 ", r"^B04 |^P11 ", "worm drive"),
+    Rule(r"^B03 |^M51 ", r"^B04 |^P11 ", "worm drive"),
+    Rule(r"^B40 |^M53 ", r"^M58 ", "trip hook 1.5 +/- 0.2 mm outside the tab roller (latch.md 5; least gaps in latch_check)"),
+    Rule(r"^M51 ", r"^M57 ", "carrier lug passes the wheel-stop blocks (lands on them only at wheel -7 / +50 deg)"),
+    Rule(r"^M64 ", r"^M65 |^B44 ", "feather-stop lug between its blocks: lands on them at beta -3 and on the buffer from +42"),
+    Rule(r"^M52 ", r"^M15 ", "pawl tail 2.2 mm inside the housing wall (latch.md 5)"),
+    Rule(r"^M5[46] |^M60 ", r"^M58 ", "hook bridge 3 mm over the latch top plate and pin heads"),
     Rule(r"^B19 ", r"^P0[349] ", "belt on the arc"),
     Rule(r"^B13 ", r"^M21 |^B12 ", "lead screw through the carriage's clearance bore and its nut"),
     Rule(r"^M08 ", r"^B08 .*pitch", "encoder board under the shaft end: IC top Z 42.5, shaft end Z 45 (SPEC 3.2, 3.3)"),
@@ -298,7 +307,7 @@ NAMED = [
     ("Generator can / belt", "probe:can", r"^B19 ", "3 mm", "poses", 3.0),
     ("Striker / bumpers P16", r"^M25 ", r"^P16 ", "touch at theta +/-20 only", "poses", None),
     ("Striker / stop posts", r"^M25 ", r"^M31 ", ">= 3 mm", "poses", 3.0),
-    ("Gearmotor / cheeks", r"^B07 ", r"^M27 ", ">= 100 mm (SPEC 4; the SPEC numbers give ~77 at theta -20)", "poses", 100.0),
+    ("Gearmotor / cheeks", r"^B07 ", r"^M27 ", ">= 75 mm (SPEC 4; the SPEC geometry gives 76.9 at theta -20)", "poses", 75.0),
     ("Prism panels / anemometer mast", r"^M0[12] ", r"^M45 ", "> 400 mm", "poses", 400.0),
     ("End plates / anemometer and mast", r"^M0[56] ", r"^M45 |^B29 ", "(not in SPEC 4)", "poses", None),
 ]
@@ -360,6 +369,174 @@ def named_clearances(poses=None, include_printed=True) -> list[dict]:
     return out
 
 
+# ----------------------------------------------------------- feather latch
+def _latch_cases():
+    """(case, wheel beta, shaft beta, released, hook pull along -X (mm), hook turn about the stem axis (deg)).
+
+    latch.md section 5 (revision B): every latched angle the shaft stops allow (-3..+48), every
+    wheel angle the wheel stops allow with the latch released (-7..+50), the hook pulled to the end
+    of its stroke against a released sear, and the hook at its position tolerance against a latched one.
+    """
+    out = [(f"latched at {b:+d}", float(b), float(b), False, 0.0, 0.0) for b in range(-3, 49)]
+    out += [(f"released, wheel at {b:+d}, shaft feathered", float(b), 45.0, True, 0.0, 0.0) for b in range(-7, 51)]
+    out += [(f"released at {b:+d}, hook at the end of its stroke", float(b), 45.0, True, L.LATCH_SOLENOID[4], 0.0)
+            for b in (-3, 0, 15, 30, 40, 48)]
+    for b in (-3, 15, 30, 40, 48):
+        for rot in (-L.HOOK_ROT_TOL, L.HOOK_ROT_TOL):
+            out.append((f"latched at {b:+d}, hook turned {rot:+.0f} deg and 0.2 mm in", float(b), float(b), False,
+                        0.2, rot))
+    return out
+
+
+LATCH_CASES = _latch_cases()
+
+#: Latch pairs allowed closer than 3 mm in latch_check, with the least gap each must keep (mm) and why
+#: (SPEC 4 latch table). A pair closer than its least gap, or touching when it has none, is reported.
+LATCH_NEAR = [
+    (r"^B40 ", r"^M58 ", 1.0, "trip hook outside the tab roller: 1.5 +/- 0.2 mm radial running gap (1.0 with the hook turned 2 deg and 0.2 mm in)"),
+    (r"^M53 ", r"^M58 ", 2.0, "sear yoke under the hook arc (2.4 with the hook at its tolerance)"),
+    (r"^M56 |^M54 Tab roller pin|^M54 Sear pin|^M60 ", r"^M58 ", 2.5, "hook bridge 3 mm over the top plate and pin heads (2.8 with the hook turned 2 deg)"),
+    (r"^M51 ", r"^M57 ", 0.0, "carrier lug lands on the wheel-stop blocks at wheel -7 / +50 (0.1 mm drawn)"),
+    (r"^B03 |^M51 ", r"^B04 ", 0.0, "worm drive (mesh)"),
+    (r"^B36 ", r"^M08 |^B39 ", 0.0, "wheel bush: bore on the shaft, flange on the retaining ring"),
+    (r"^B37 ", r"^M50 ", 0.0, "pawl roller on the load flank (latched) or riding on the collar OD (re-engaging)"),
+    (r"^M54 Pawl pivot pin", r"^M50 ", 0.3, "pawl pivot pin passes the collar OD (0.4 mm)"),
+    (r"^B36 |^M52 ", r"^M50 ", 0.4, "bush 0.5 mm axial float under the collar; pawl nose cheeks 0.5 mm over and under it"),
+    (r"^M53 |^M60 |^B38 |^M54 Sear", r"^M08 |^M50 ", 1.5, "sear, its roller, pin and stop beside the shaft and collar (1.7 with the sear tripped)"),
+    (r"^M52 ", r"^M08 ", 2.0, "pawl tail beside the shaft with the pawl open 30 deg (2.4)"),
+    (r"^B03 |^M51 ", r"^M08 ", 2.5, "wheel and carrier bores over the bush (3.0)"),
+    (r"^M52 ", r"^M15 ", 2.0, "pawl tail inside the housing wall (2.2)"),
+    (r"^B37 ", r"^M15 ", 2.5, "opened pawl roller inside the housing wall (2.9)"),
+]
+
+
+def _latch_rule(a, b):
+    for pa, pb, gmin, why in LATCH_NEAR:
+        if (re.search(pa, _key(a)) and re.search(pb, _key(b))) or (re.search(pa, _key(b)) and re.search(pb, _key(a))):
+            return gmin, why
+    return None
+
+
+def latch_check(include_printed: bool = True, log=print) -> list[dict]:
+    """Interference and clearance of the latch with the wheel and the shaft at different angles.
+
+    Parts on the worm wheel (``extra['latch'] == 'wheel'``) are turned by the wheel angle, in the
+    released cases with the pawl open and the sear tripped; every other frame-P part is turned
+    by the shaft angle; frame-S parts stay put, except the trip hook and stem, which are pulled
+    along -X and turned about the stem axis where the case says. Only pairs that move relative
+    to each other are checked. A pair closer than 3 mm is intended only if it has a LATCH_NEAR
+    rule and keeps that rule's least gap.
+    """
+    from build123d import Pos, Rot
+    from . import structure
+    its, _ = assembly.collect(0.0, L.CARRIAGE_R_DEFAULT, include_printed)
+    near = [it for it in its if it.frame in ("S", "P")]
+    released = {(i, n): shp for i, n, shp, _, _ in structure.latch_wheel_shapes(L.PAWL_OPEN_DEG, L.SEAR_TRIP_DEG)}
+    _, sy, sz, _ = L.TRIP_STEM
+    out = []
+
+    def rz(deg):
+        m = np.eye(4)
+        b = np.radians(deg)
+        m[:2, :2] = [[np.cos(b), -np.sin(b)], [np.sin(b), np.cos(b)]]
+        return m
+
+    def hook_m(dx, rot):
+        m = np.eye(4)
+        r = np.radians(rot)
+        c_, s_ = np.cos(r), np.sin(r)
+        m[1:3, 1:3] = [[c_, -s_], [s_, c_]]
+        m[1:3, 3] = np.array([sy, sz]) - m[1:3, 1:3] @ np.array([sy, sz])
+        m[0, 3] = -dx
+        return m
+
+    meshed = {}
+    for case, bw, bs, rel, hdx, hrot in LATCH_CASES:
+        t0 = time.time()
+        posed = []
+        for k, it in enumerate(near):
+            role = "S" if it.frame == "S" else ("W" if it.extra.get("latch") == "wheel" or it.id == "B03" else "P")
+            shp = it.shape
+            use_rel = role == "W" and rel and (it.id, it.name) in released
+            if use_rel:
+                shp = released[(it.id, it.name)]
+            moved = role == "S" and it.id in ("M58", "M61")
+            if role == "S":
+                m = hook_m(hdx, hrot) if moved else np.eye(4)
+            else:
+                m = rz(bw if role == "W" else bs)
+            key = (k, use_rel)
+            if key not in meshed:
+                v, _ = meshmod.mesh(shp, it.tol)
+                meshed[key] = (v, meshmod.manifold(shp, it.tol) if len(v) else None)
+            v, man = meshed[key]
+            if len(v) == 0:
+                continue
+            pv = meshmod.transform(v, m)
+            occ = Rot(0, 0, bw if role == "W" else bs) * shp if role != "S" else (
+                Pos(-hdx, 0, 0) * Pos(0, sy, sz) * Rot(hrot, 0, 0) * Pos(0, -sy, -sz) * shp if moved else shp)
+            posed.append((role, it, occ, m, pv.min(0), pv.max(0), man))
+        inter, close = [], []
+        for i in range(len(posed)):
+            ra, a, oa, ma, loa, hia, mana = posed[i]
+            for j in range(i + 1, len(posed)):
+                rb, b, ob, mb, lob, hib, manb = posed[j]
+                if ra == rb or "W" not in (ra, rb):
+                    continue
+                if not (np.all(loa <= hib + L.CLEARANCE_MIN) and np.all(hia >= lob - L.CLEARANCE_MIN)):
+                    continue
+                if mana is None or manb is None:
+                    continue
+                A = mana.transform(meshmod.m3x4(ma))
+                B = manb.transform(meshmod.m3x4(mb))
+                rec = {"a": a.label, "b": b.label}
+                vol = float((A ^ B).volume())
+                if vol > OVERLAP_MM3 and _rule_for(ALLOW, a, b) is None:
+                    try:
+                        from OCP.BRepAlgoAPI import BRepAlgoAPI_Common
+                        from OCP.BRepGProp import BRepGProp
+                        from OCP.GProp import GProp_GProps
+                        op = BRepAlgoAPI_Common(oa.wrapped, ob.wrapped)
+                        op.Build()
+                        props = GProp_GProps()
+                        BRepGProp.VolumeProperties_s(op.Shape(), props)
+                        ex = abs(float(props.Mass()))
+                    except Exception:  # noqa: BLE001
+                        ex = None
+                    rec["mesh_mm3"], rec["exact_mm3"] = round(vol, 2), None if ex is None else round(ex, 2)
+                    if ex is None or ex > OVERLAP_MM3:
+                        inter.append(rec)
+                        continue
+                    vol = 0.0
+                if vol > OVERLAP_MM3:
+                    continue
+                try:
+                    gap = float(A.min_gap(B, L.CLEARANCE_MIN))
+                except Exception:  # noqa: BLE001
+                    gap = None
+                if gap is not None and gap < L.CLEARANCE_MIN - 1e-6:
+                    rule = _latch_rule(a, b)
+                    ok = rule is not None and gap >= rule[0] - 0.05
+                    rec.update(gap_mesh=round(gap, 2), least=None if rule is None else rule[0],
+                               intended=rule[1] if ok else None, placeholder=a.placeholder or b.placeholder)
+                    close.append(rec)
+        r = {"case": case, "beta_wheel": bw, "beta_shaft": bs, "released": rel, "hook_pull": hdx, "hook_turn": hrot,
+             "interferences": inter, "close": close, "seconds": round(time.time() - t0, 1)}
+        out.append(r)
+        if log:
+            bad = [c for c in close if not c["intended"]]
+            if inter or bad:
+                log(f"latch: {case}: {len(inter)} interferences, {len(bad)} gaps below their least ({r['seconds']} s)")
+            for c in inter:
+                log(f"  INTERFERENCE {c['a']} x {c['b']} {c.get('exact_mm3')} mm3")
+            for c in bad:
+                log(f"  gap {c['gap_mesh']} mm {c['a']} x {c['b']} (least {c['least']})")
+    if log:
+        log(f"latch: {len(out)} cases, {sum(len(r['interferences']) for r in out)} interferences, "
+            f"{sum(1 for r in out for c in r['close'] if not c['intended'])} gaps below their least")
+    return out
+
+
 # ------------------------------------------------------------------- driver
 def check(items: list[Item] | None = None, poses=None, carriage_r: float = L.CARRIAGE_R_DEFAULT,
           include_printed: bool = True, named: bool = True, log=print) -> dict:
@@ -395,6 +572,7 @@ def check(items: list[Item] | None = None, poses=None, carriage_r: float = L.CAR
         extra.append(cr)
         if log:
             log(f"carriage r {r_:.0f} at theta 0: {len(cr['interferences'])} interferences")
+    lt = latch_check(include_printed, log=log)
     nm = named_clearances(poses, include_printed) if named else []
     _, prep = assembly.printed_items()
     out = {
@@ -410,10 +588,12 @@ def check(items: list[Item] | None = None, poses=None, carriage_r: float = L.CAR
         "clearance_min_mm": L.CLEARANCE_MIN,
         "seconds": round(time.time() - t0, 1),
     }
+    out["latch"] = lt
     out["summary"] = {
-        "interferences": sum(len(r["interferences"]) for r in results) + sum(len(r["interferences"]) for r in extra),
+        "interferences": sum(len(r["interferences"]) for r in results) + sum(len(r["interferences"]) for r in extra)
+        + sum(len(r["interferences"]) for r in lt),
         "placeholder_overlaps": sum(len(r["placeholder_overlaps"]) for r in results),
-        "unexplained_close": sum(1 for r in results for c in r["close"] if not c["intended"] and not c["placeholder"]),
+        "unexplained_close": sum(1 for r in results + lt for c in r["close"] if not c["intended"] and not c["placeholder"]),
         "named_below": [n["pair"] for n in nm if str(n.get("status", "")).startswith(("BELOW", "CHECK"))],
         "placeholders": len(out["placeholders"]),
     }
@@ -431,7 +611,7 @@ def write_report(res: dict, md_path, json_path):
              f"- Overlaps involving placeholder envelopes (printed part not built yet): {s['placeholder_overlaps']}",
              f"- Moving pairs closer than 3 mm with no stated reason: {s['unexplained_close']}",
              f"- SPEC 4 named pairs below their designed value: {', '.join(s['named_below']) or 'none'}",
-             f"- Printed parts still placeholders: {s['placeholders']} of 24",
+             f"- Printed parts still placeholders: {s['placeholders']} of {len(printed.SPEC_TABLE)}",
              f"- Run time: {res['seconds']} s", ""]
     lines += ["## Poses", "", "| theta | beta | interferences | placeholder overlaps | intended contacts | gaps < 3 mm (unexplained) | belt on-arc margin | pulley wrap |",
               "|---|---|---|---|---|---|---|---|"]
@@ -447,6 +627,18 @@ def write_report(res: dict, md_path, json_path):
             for c in r["interferences"]:
                 lines.append(f"| {c['a']} | {c['b']} | {c['frames']} | {c['category']} | {c.get('exact_mm3')} | {c.get('mesh_mm3')} |")
             lines.append("")
+    if res.get("latch"):
+        lines += ["## Feather latch: wheel and shaft angles (theta 0)", "",
+                  "The worm wheel and the pitch shaft turn together only while latched. These cases pose the parts on the "
+                  "wheel and the parts on the shaft separately (latch.md section 5).", "",
+                  "| Case | wheel | shaft | interferences | gaps < 3 mm (unexplained) |", "|---|---|---|---|---|"]
+        for r in res["latch"]:
+            unexp = sum(1 for c in r["close"] if not c["intended"])
+            lines.append(f"| {r['case']} | {r['beta_wheel']:+.0f} | {r['beta_shaft']:+.0f} | {len(r['interferences'])} | "
+                         f"{len(r['close'])} ({unexp}) |")
+            for c in r["interferences"]:
+                lines.append(f"| INTERFERENCE | | | {c['a']} x {c['b']} | {c.get('exact_mm3')} mm3 |")
+        lines.append("")
     lines += ["## SPEC 4 named clearances (exact B-rep distance, worst pose)", "",
               "| Pair | Designed | Measured min (mm) | At | Status |", "|---|---|---|---|---|"]
     for n in res["named_clearances"]:

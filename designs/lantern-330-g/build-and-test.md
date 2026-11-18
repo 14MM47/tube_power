@@ -38,7 +38,7 @@ No prices are given; check current suppliers. Masses and ratings come from `tool
 | Prism | 10 mm extruded polystyrene (XPS) board, ~2.4 m², ~25 g/m² glass tissue and laminating epoxy on both faces | Four 330 × 1,000 mm panels, three bulkheads and two 660 mm square end plates. Build the outer skin up to ~3 layers over the bottom third. Alternative: 4 mm twin-wall polypropylene with bulkheads every 200 mm |
 | | Glass tape (50 mm) | All four corners, inside and out |
 | Neck | Roll-wrapped carbon tube, mostly lengthwise fibres, 50 × 47 mm, 600 mm | Bonded into the spider at the bottom bulkhead |
-| Pitch drive | Two small ball bearings carrying the neck foot inside the hub; worm gear and DC gearmotor; magnetic angle encoder; torsion spring towards 45°; electromagnetic clutch (power to engage) | Fail-safe: losing power releases the clutch and the spring feathers the prism. Torque about 14 N m at 45 m/s |
+| Pitch drive | Two small ball bearings carrying the neck foot inside the hub; worm gear and DC gearmotor; magnetic angle encoder; torsion spring towards 45°; zero-hold feather latch with a 12 V trip solenoid ([cad/latch.md](cad/latch.md)) | Fail-safe: the controller fires the latch release from a stored-energy reservoir on command, on loss of the keep-alive or on loss of supply, and the spring feathers the prism. No power is needed to hold either state. Torque about 14 N m at 45 m/s |
 | Hinge | 25 mm stainless axle, two sealed deep-groove ball bearings (6005-2RS) 300 mm apart | Hub and post head built for 800 N m; each bearing carries ~2.5 kN at 45 m/s |
 | | Rubber end stops | ±20° |
 | Springs | Two compression springs, ~31 N/mm each, ~40 mm usable travel, fatigue-rated, working force up to ~1.1 kN | Carriage 15–140 mm below the hinge, T8 lead screw and NEMA-17 stepper as on 250-B |
@@ -65,22 +65,33 @@ No prices are given; check current suppliers. Masses and ratings come from `tool
 |---|---|---|
 | Generator | Spin with a drill at known rpm: open-circuit voltage, winding resistance; time a spin-down | Ke, R and drag close to the preset, or update them in the calculator |
 | Hinge friction | Swing with the belt off and the springs disconnected (prism hanging down); time the decay | Friction below ~0.1 N m at the hinge |
-| Pitch drive | Drive 0–45° and back; cut power at 0° | Feathers to 45° on its own within ~2 s |
+| Pitch drive | Drive 0–48° and back; check the gearmotor current against the spring torque | Encoder follows the command within 1°; current matches the spring (18.5 N·m at 45°, 26.2 at 0°) |
+| Latch trip | Latched at β = 0, 15, 30 and 40°: remove the supply and let the board fire from its reservoir | β passes 44° within 0.5 s of the pulse, at every angle |
+| Latch trip force | Latched and loaded at β = 0 (spring only): spring balance on the tab roller through the port; then the reduced-current pulse (1.33 A) | ≤ 3.8 N radial at the dynamic load (scale by the actual torque: about 2.2 N at the spring-only load); trips at 1.33 A |
+| Latch re-engagement | Run the re-engagement procedure (cad/latch.md section 6) three times from the feathered stop | Latches every time; the shaft follows the wheel within 1° on the way back to 0° |
+| Latch settings | Feeler gauge through the port | Sear engagement 0.15 ± 0.05 mm; hook gap 1.5 ± 0.2 mm; spring torque at 0° 26.2 N·m ± 3 % |
 | Springs | Set the carriage at several positions; pluck; log the frequency | Matches the calculator's carriage table; never statically unstable (the prism must not fall over at the lowest setting) |
 | Neck mode | Lock the hinge, tap the prism, log the ring-down | About 17 Hz expected; must exceed 1.5 × the top spring frequency (6 Hz) |
 | Brake | Pluck, then short the generator; cut power while swinging | Swing dies within a few cycles |
 
 ## 5. Control software
 
-- **Idle.** Face-on, generator open, until the wind exceeds about 3.5 m/s for 30 s. Then kick-start: drive the motor at the carriage's current frequency for a few cycles.
+- **Parked** (calm, or net output negative). Feathered to 45° by the torsion spring with the latch released, generator shorted by the normally-on brake, MCU in Stop mode, woken by anemometer pulses (about 4 mW for the board). Nothing is powered to hold this state.
+- **Restart.** When the 1–2 min mean wind is above break-even with the controller's running draw (about 4 m/s at 0.2 W) **and** the battery is above its restart reserve:
+  - re-engage the latch with the worm (cad/latch.md section 6; pass only if the shaft follows the wheel within 1° on the way to 0°);
+  - pitch to 0°, open the brake and kick-start: drive the motor at the carriage's current frequency for a few cycles.
+  - Loads are shed at a higher battery level than the restart reserve, so the controller can always restart.
 - **Generating.**
   - The generator load follows maximum power: hill-climb on measured power.
   - The carriage holds the swing at ±15°: move out (stiffer) if the swing exceeds it, in if it is smaller. This one loop keeps the frequency where the model wants it.
+- **Park on net power.** After about 5 min of negative net output, drive the latched shaft to 40° with the worm and fire the latch: first the 1.33 A margin-test pulse, then full current if it has not tripped in 0.5 s (log "trip margin low").
 - **Rated.** Above 20 W, a slow loop on output power raises the pitch, keeping the generator load near maximum-power. Rate-limit pitch to a few degrees per second.
+- **Every pitch move:** compare the gearmotor current with the expected spring torque; a drop means a broken spring: pitch to 45° latched with the worm and stay parked.
 - **Feathered.** Pitch to 45° and short the generator:
   - when the 3-second gust exceeds 42 m/s or the 1-minute mean exceeds 40 m/s;
-  - on over-voltage, icing (temperature below 2 °C with rain), loss of the swing sensor, or a battery fault;
-  - on loss of power (spring and clutch).
+  - on over-voltage, icing risk (temperature at or below +3 °C with rain or high humidity, so the latch is released before ice can form on the trip parts), loss of the swing sensor, or a battery fault;
+  - on loss of power or keep-alive (latch released from the reservoir; spring).
+  - If β has not passed 44° within 0.5 s of the pulse: two more pulses 2 s apart, then feather with the worm, keep the brake on and log a fault.
 
   Return to service after 10 minutes below 35 m/s.
 

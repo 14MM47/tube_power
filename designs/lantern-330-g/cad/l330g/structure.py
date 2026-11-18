@@ -170,6 +170,15 @@ def _hub(c: _Collector):
     wy, wz = L.WORM_WINDOW_YZ
     housing = tube_z(L.PITCH_HOUSING_OD, L.PITCH_HOUSING_ID, L.PITCH_HOUSING_Z)
     housing = housing - box((20, 60), (wy - hw / 2, wy + hw / 2), (wz - hh / 2, wz + hh / 2))
+    _, sy, sz, _ = L.TRIP_STEM
+    housing = housing - cyl_x(L.HOUSING_STEM_HOLE_D, (-60.0, -40.0), sy, sz)     # latch trip-stem guide bush
+    sfd, sfx = L.STEM_SPOT_FACE
+    housing = housing - cyl_x(sfd, (-60.0, sfx), sy, sz)                         # spot face for its flange
+    pphi, pw, pz = L.INSPECTION_PORT
+    housing = housing - Rot(0, 0, pphi) * box((L.PITCH_HOUSING_ID / 2 - 5, L.PITCH_HOUSING_OD / 2 + 5),
+                                              (-pw / 2, pw / 2), pz)            # latch inspection port
+    for ph, zb in L.SADDLE_BOLTS:                                                # M4 tapped, solenoid bracket
+        housing = housing - _radial_x(3.3, L.PITCH_HOUSING_ID / 2 - 1, L.PITCH_HOUSING_OD / 2 + 1, ph, zb)
     c.add("M15", "Pitch housing tube", housing, "alu", "S", group="pitch",
           material_label=ALU_6082, tol=0.1)
     z0, z1 = L.CAP_Z
@@ -206,12 +215,9 @@ def _hub(c: _Collector):
         - cyl_x(L.GEARMOTOR_SHAFT[0], ((cx0 + cx1) / 2, cx1 + 1), wy, wz)
     c.add("B05", "Shaft coupling 5-4", coupling, "alu", "S", group="pitch", bought=True,
           material_label="Aluminium (coupling)", tol=0.05)
-    clutch = tube_z(L.CLUTCH_D, L.PITCH_SHAFT_OD, L.CLUTCH_Z)
-    clutch = clutch - (tube_z(L.CLUTCH_D + 2, L.CLUTCH_D - 3, (181.5, 183.5)))
-    clutch = clutch - tube_z(48, 40, (L.CLUTCH_Z[1] - 2, L.CLUTCH_Z[1] + 1))
-    c.add("B06", "Electromagnetic clutch", clutch, "bought_elec", "P", group="pitch", bought=True,
-          tol=0.05)
-    c.add("M18", "Torsion spring (feather)", spring_z(L.TORSION_SPRING_D - 4, 4.0, L.TORSION_SPRING_Z, 7),
+    _latch(c)
+    c.add("M18", "Torsion spring (feather), wire 7", spring_z(L.TORSION_SPRING_D - L.TORSION_SPRING_WIRE,
+          L.TORSION_SPRING_WIRE, L.TORSION_SPRING_Z, 10),
           "spring", "P", group="pitch", tol=0.1)
     c.add("B07", "Pitch gearmotor JGA25-370", _gearmotor(), "bought_elec", "S", group="pitch",
           bought=True, tol=0.05)
@@ -284,6 +290,292 @@ def _hub(c: _Collector):
           group="hinge", tag="hinge", bought=True, material_label="NdFeB magnet N35", tol=0.02)
 
 
+# ------------------------------------------------- zero-hold feather latch
+def _pol(r, phi):
+    a = math.radians(phi)
+    return (r * math.cos(a), r * math.sin(a))
+
+
+def _sector_z(r_in, r_out, a0, a1, zr, n=48):
+    """Annular sector about the Z axis, angles in degrees from +X towards +Y."""
+    pts = [_pol(r_out, a0 + (a1 - a0) * i / n) for i in range(n + 1)]
+    pts += [_pol(r_in, a0 + (a1 - a0) * i / n) for i in range(n, -1, -1)]
+    return Pos(0, 0, min(zr)) * extrude(make_face(Polyline(*pts, close=True)), abs(zr[1] - zr[0]))
+
+
+def _link(p0, p1, w, zr):
+    """Flat bar of width w from p0 to p1 (XY), rounded ends, over zr."""
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    ln = math.hypot(dx, dy)
+    cz, h = (zr[0] + zr[1]) / 2, abs(zr[1] - zr[0])
+    bar = Pos((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, cz) * Rot(0, 0, math.degrees(math.atan2(dy, dx))) * Box(ln, w, h)
+    return bar + cyl_z(w, zr, *p0) + cyl_z(w, zr, *p1)
+
+
+def _about(shape, centre, deg):
+    """Rotate a shape about the vertical axis through ``centre`` (XY)."""
+    if not deg:
+        return shape
+    return Pos(centre[0], centre[1], 0) * Rot(0, 0, deg) * Pos(-centre[0], -centre[1], 0) * shape
+
+
+def latch_geometry() -> dict:
+    """Key points of the latch in frame P at beta = 0 (latch.md section 2)."""
+    _, _, _, (rr, pr) = L.LATCH_ROLLER
+    c1 = _pol(rr, pr)
+    a = math.radians(pr)
+    et = (-math.sin(a), math.cos(a))
+    p = (c1[0] + L.PAWL_ARM_A * et[0], c1[1] + L.PAWL_ARM_A * et[1])
+    _, _, tail_end, rt = L.PAWL_TAIL
+    t = _pol(rt, tail_end)
+    d = (t[0] - p[0], t[1] - p[1])
+    b = math.hypot(*d)
+    v = (-d[1] / b, d[0] / b)                    # tail's direction of motion as the pawl opens
+    c2 = (t[0] + 8.05 * v[0], t[1] + 8.05 * v[1])
+    sp = (c2[0] + L.SEAR_L2 * v[0], c2[1] + L.SEAR_L2 * v[1])
+    return {"roller": c1, "pivot": p, "tail": t, "v": v, "b": b, "sear_roller": c2, "sear_pivot": sp}
+
+
+def _box_uv(c, u_deg, su, sv, zr):
+    """Box centred at c (XY) with its local X along u_deg, sizes su x sv, over zr."""
+    cz, h = (zr[0] + zr[1]) / 2, abs(zr[1] - zr[0])
+    return Pos(c[0], c[1], cz) * Rot(0, 0, u_deg) * Box(su, sv, h)
+
+
+def latch_slot_cut(zr):
+    """The collar's slot: planar load flank 30 deg from radial, the roller seated on it (latch.md 2)."""
+    _, _, _, (rr, pr) = L.LATCH_ROLLER
+    rod = L.LATCH_ROLLER[0]
+    a = math.radians(pr)
+    rhat, that = (math.cos(a), math.sin(a)), (-math.sin(a), math.cos(a))
+    fl = math.radians(L.LATCH_NOTCH_FLANK)
+    n = (math.cos(fl) * that[0] + math.sin(fl) * rhat[0], math.cos(fl) * that[1] + math.sin(fl) * rhat[1])
+    f = (-math.sin(fl) * that[0] + math.cos(fl) * rhat[0], -math.sin(fl) * that[1] + math.cos(fl) * rhat[1])
+    c1 = _pol(rr, pr)
+    pc = (c1[0] - (rod / 2 + 0.02) * n[0], c1[1] - (rod / 2 + 0.02) * n[1])     # contact point on the flank
+    w, bot = L.LATCH_SLOT
+    lf = 40.0
+    centre = (pc[0] + w / 2 * n[0] + (lf / 2 - bot) * f[0], pc[1] + w / 2 * n[1] + (lf / 2 - bot) * f[1])
+    return _box_uv(centre, math.degrees(math.atan2(n[1], n[0])), w, lf, zr)
+
+
+def latch_wheel_shapes(pawl_open: float = 0.0, sear_trip: float = 0.0) -> list[tuple]:
+    """(id, name, shape, material, label) for the parts that turn with the worm wheel.
+
+    ``pawl_open`` and ``sear_trip`` (degrees) pose the pawl about its pivot and the
+    sear about its pin: 0, 0 is latched; PAWL_OPEN_DEG, SEAR_TRIP_DEG is released.
+    """
+    g = latch_geometry()
+    c1, p, t, v, c2, sp = g["roller"], g["pivot"], g["tail"], g["v"], g["sear_roller"], g["sear_pivot"]
+    fd = (-v[1], v[0])                       # along the tail face, towards the closing side
+    od, idd = LATCH_CARRIER_OD_ID()
+    z0, z1 = L.LATCH_CARRIER[1]
+    carrier = tube_z(od, idd, (z0, z1))
+    ri, ro, lphi, lw = L.CARRIER_LUG
+    lug = Pos(0, 0, 0) * Rot(0, 0, lphi) * box((ri - 1, ro), (-lw / 2, lw / 2), (z0, z1))
+    carrier = carrier + lug
+    sx, sy = L.PAWL_STRAP[0]
+    post_xy = _pol(sx, sy)
+    for xy, dd in ((p, L.PAWL_PIN_D), (post_xy, 8.0)):
+        carrier = carrier - cyl_z(dd, (z0 - 1, z1 + 1), *xy)
+    nb, rb, _, dh = L.WHEEL_JOINT
+    for a in range(nb):
+        carrier = carrier - cyl_z(dh, (z0 - 1, z1 + 1), *_pol(rb, 360.0 * a / nb))
+    # pawl: nose (straddles collar and roller), pivot boss, tail arm above the collar
+    nz0, nz1 = L.PAWL_NOSE_Z
+    rz0, rz1 = L.LATCH_ROLLER[2]
+    nri, nro, (na0, na1) = L.PAWL_NOSE
+    nose = _sector_z(nri, nro, na0, na1, (nz0, nz1))
+    nose = nose - _sector_z(nri - 1, nro + 3, na0 - 1, na1 + 1, (rz0 - 0.2, rz1 + 0.2))
+    nose = nose + _link(_pol(35.0, 140.0), p, 12.0, (rz1 + 0.2, nz1))
+    nose = nose + _link(_pol(35.0, 140.0), p, 12.0, (nz0, rz0 - 0.2))
+    bz0, bz1 = L.PAWL_BOSS_GAP_Z                   # no boss beside the collar: the pin passes its OD 0.4 mm
+    boss = cyl_z(12.0, (nz0, bz0), *p) + cyl_z(12.0, (bz1, L.PAWL_TAIL_Z[1]), *p)
+    tz = L.PAWL_TAIL_Z
+    tri, tro, tail_end, _ = L.PAWL_TAIL
+    ts = L.PAWL_TAIL_START
+    # tail: an arc at R 38..47.5 (clear of the shaft when the pawl is open 30 deg), with a foot behind
+    # the end face that carries the sear contact at R 36
+    tail = _sector_z(tri, tro, ts, tail_end + 12.0, tz) + _link(_pol((tri + tro) / 2, ts), p, 10.0, tz)
+    fdep, fout = L.PAWL_FOOT
+    trm = L.PAWL_TAIL_TRIM
+    fc = (t[0] - fdep / 2 * v[0] + (trm - fout) / 2 * fd[0], t[1] - fdep / 2 * v[1] + (trm - fout) / 2 * fd[1])
+    tail = tail + _box_uv(fc, math.degrees(math.atan2(v[1], v[0])), fdep, fout + trm, tz)
+    ang = math.degrees(math.atan2(v[1], v[0]))
+    cut = Pos(t[0] + 50 * v[0], t[1] + 50 * v[1], (tz[0] + tz[1]) / 2) * Rot(0, 0, ang) * Box(100, 200, 20)
+    tail = tail - cut
+    # trim the end face on the closing side: the sear stop limits the roller to the contact +/- 0.25 mm
+    tr = L.PAWL_TAIL_TRIM
+    tail = tail - _box_uv((t[0] + (tr + 10) * fd[0] - 2 * v[0], t[1] + (tr + 10) * fd[1] - 2 * v[1]),
+                          math.degrees(math.atan2(fd[1], fd[0])), 20.0, 20.0, (tz[0] - 1, tz[1] + 1))
+    pawl = nose + boss + tail
+    pawl = pawl - cyl_z(L.PAWL_PIN_D, (nz0 - 1, tz[1] + 1), *p) - cyl_z(5.0, (nz0 - 1, nz1 + 1), *c1)
+    rod, rpin, rzr, _ = L.LATCH_ROLLER
+    roller = tube_z(rod, rpin, rzr, *c1)
+    roller_pin = cyl_z(rpin, (nz0, nz1), *c1)
+    pawl, roller, roller_pin = (_about(x, p, pawl_open) for x in (pawl, roller, roller_pin))
+    sz = L.PAWL_STRAP[1]
+    tz0, tz1 = L.LATCH_TOP_PLATE[2]
+    strap = _link(p, post_xy, 12.0, sz) - cyl_z(L.PAWL_PIN_D, (sz[0] - 1, sz[1] + 1), *p) \
+        - cyl_z(8.0, (sz[0] - 1, sz[1] + 1), *post_xy)
+    pawl_pin = cyl_z(L.PAWL_PIN_D, (z0, sz[1]), *p)
+    post = cyl_z(8.0, (z0, tz1), *post_xy)
+    # sear: needle-bush boss, arm to the roller pin, arm via the elbow to the tab yoke and its roller
+    sz0, sz1 = L.SEAR_Z
+    pin_d, boss_d, boss_z = L.SEAR_PIVOT
+    elbow = _pol(*L.SEAR_ELBOW)
+    (tx0, tx1), (ty0, ty1), tzr = L.SEAR_TAB
+    q = ((tx0 + tx1) / 2, 0.0)
+    sear = _link(sp, c2, 9.0, (sz0, sz1)) + _link(sp, elbow, 8.0, (sz0, sz1)) + _link(elbow, q, 8.0, (sz0, sz1)) \
+        + cyl_z(boss_d, boss_z, *sp) + cyl_z(12.0, (sz0, sz1), *c2) + box((tx0, tx1), (ty0, ty1), tzr)
+    (kx0, kx1), kz = L.SEAR_TAB_SLOT
+    sear = sear - box((kx0, kx1 + 1), (ty0 - 1, ty1 + 1), kz)
+    sear = sear - cyl_z(boss_d - 4.0, (boss_z[0] - 1, boss_z[1] + 1), *sp)
+    trd, trp, (trx, try_), trz = L.TAB_ROLLER
+    sear = sear - cyl_z(trp, (tzr[0] - 1, tzr[1] + 1), trx, try_)
+    sod, sid, szr = L.SEAR_ROLLER
+    sear_roller = tube_z(sod, sid, szr, *c2)
+    sear_roller_pin = cyl_z(sid, (szr[0] - 0.6, sz1), *c2) + cyl_z(10.0, (szr[0] - 0.6, szr[0]), *c2)
+    sear = sear - cyl_z(sid, (sz0 - 1, sz1 + 1), *c2)
+    tab_roller = tube_z(trd, trp, trz, trx, try_)
+    tab_pin = cyl_z(trp, tzr, trx, try_)
+    sear, sear_roller, sear_roller_pin, tab_roller, tab_pin = (
+        _about(x, sp, sear_trip) for x in (sear, sear_roller, sear_roller_pin, tab_roller, tab_pin))
+    sear_pin = cyl_z(pin_d, (sz0, tz1), *sp)
+    needle_bush = tube_z(boss_d - 4.0, pin_d, boss_z, *sp)
+    # sear stop: hardened eccentric sleeve on a shoulder screw hanging from the top plate, bearing on the
+    # closing side of the sear's roller arm (latch.md 2: sets the 0.15 +/- 0.05 mm engagement)
+    arm, sd_, gap, szz = L.SEAR_STOP
+    st = (sp[0] - arm * v[0] + (4.5 + sd_ / 2 + gap) * fd[0], sp[1] - arm * v[1] + (4.5 + sd_ / 2 + gap) * fd[1])
+    stop = cyl_z(sd_, szz, *st) + cyl_z(4.0, (szz[1], tz1), *st)
+    # top plate: from beyond the sear stop round past +X to the strap post (clear of the tripped sear)
+    pri, pro, _, a_start = L.LATCH_TOP_PLATE
+    top = _sector_z(pri, pro, a_start, sy + 4.0, (tz0, tz1)) + _link(_pol(26.0, sy), post_xy, 10.0, (tz0, tz1))
+    top = top - cyl_z(pin_d, (tz0 - 1, tz1 + 1), *sp) - cyl_z(8.0, (tz0 - 1, tz1 + 1), *post_xy) \
+        - cyl_z(4.0, (tz0 - 1, tz1 + 1), *st)
+    bid, bod, bzr = L.WHEEL_BUSH
+    fod, fzr = L.WHEEL_BUSH_FLANGE
+    bush = tube_z(bod, bid, bzr) + tube_z(fod, bid, fzr)
+    q42 = "Steel 42CrMo4 QT"
+    return [
+        ("B36", "Wheel bush, sintered bronze, flanged 35/41", bush, "bronze", "Sintered bronze (bought)"),
+        ("M51", "Latch carrier", carrier, "steel", q42),
+        ("M52", "Latch pawl", pawl, "steel", q42 + ", nitrocarburised + post-oxidised"),
+        ("B37", "Pawl roller NATV 5-PP (corrosion-protected)", roller, "bearing", None),
+        ("M54", "Pawl roller pin", roller_pin, "stainless", "Stainless 17-4PH H900"),
+        ("M54", "Pawl pivot pin", pawl_pin, "stainless", "Stainless 17-4PH H900"),
+        ("M55", "Pawl strap and post", strap + post, "steel", q42),
+        ("M53", "Latch sear", sear, "steel", q42 + ", nitrocarburised + post-oxidised"),
+        ("B38", "Sear roller INA RSTO 5", sear_roller, "bearing", "Needle track roller (bought)"),
+        ("M54", "Sear roller pin, hardened", sear_roller_pin, "steel", "Steel 100Cr6, 60 HRC"),
+        ("B40", "Tab roller 683-2RS stainless", tab_roller, "bearing", "Stainless bearing (bought)"),
+        ("M54", "Tab roller pin", tab_pin, "stainless", "Stainless 17-4PH H900"),
+        ("M54", "Sear pin, hardened", sear_pin, "steel", "Steel 100Cr6, 60 HRC"),
+        ("B41", "Sear pivot needle bush HK0609", needle_bush, "bearing", "Needle bush (bought)"),
+        ("M60", "Sear stop, eccentric sleeve on shoulder screw", stop, "steel", "Steel 100Cr6, 60 HRC"),
+        ("M56", "Latch top plate", top, "steel", q42),
+    ]
+
+
+def LATCH_CARRIER_OD_ID():
+    return L.LATCH_CARRIER[0], L.WHEEL_BUSH[1]
+
+
+def _radial_x(d, r0, r1, phi, z):
+    """Cylinder of diameter d along the radial direction phi (frame S, degrees), from R r0 to r1 at height z."""
+    return Rot(0, 0, phi) * cyl_x(d, (r0, r1), 0.0, z)
+
+
+def _latch(c: _Collector):
+    """The zero-hold feather latch (SPEC 3.3, latch.md revision B) in place of the clutch."""
+    for id_, name, shp, mat, lab in latch_wheel_shapes():
+        it = c.add(id_, name, shp, mat, "P", group="pitch", tol=0.05, bought=id_.startswith("B"),
+                   material_label=lab)
+        it.extra["latch"] = "wheel"
+    cod, czr = L.LATCH_COLLAR
+    r_sh = L.PITCH_SHAFT_OD / 2
+    collar = tube_z(cod, L.PITCH_SHAFT_OD, czr) - latch_slot_cut((czr[0] - 1, czr[1] + 1))
+    for sy_ in (1, -1):        # two keyways A 10 x 8 (3.3 deep in the collar), at +/-Y
+        collar = collar - box((-5.0, 5.0), tuple(sorted((sy_ * (r_sh - 1), sy_ * (r_sh + 3.3)))), (czr[0] - 1, czr[1] + 1))
+    it = c.add("M50", "Latch collar (one slot)", collar, "steel", "P", group="pitch", tol=0.05,
+               material_label="Steel 18CrNiMo7-6, case-hardened 58-62 HRC, CHD >= 0.6")
+    it.extra["latch"] = "shaft"
+    rod_, rzr = L.RETAINING_RING
+    it = c.add("B39", "Retaining ring DIN 471-35", tube_z(rod_, L.PITCH_SHAFT_OD, rzr), "spring", "P",
+               group="pitch", bought=True, tol=0.05)
+    it.extra["latch"] = "shaft"
+    # feather stop: keyed collar with a lug on the shaft (frame P), blocks and a PU buffer on the housing (frame S)
+    lri, lro, lphi, lw = L.FEATHER_LUG
+    fz = L.FEATHER_STOP_Z
+    stop_collar = tube_z(2 * lri + 0.2, L.PITCH_SHAFT_OD, fz) + _sector_z(lri, lro, lphi - lw / 2, lphi + lw / 2, fz)
+    it = c.add("M64", "Feather-stop collar and lug", stop_collar, "steel", "P", group="pitch", tol=0.05,
+               material_label="Steel 42CrMo4 QT")
+    it.extra["latch"] = "shaft"
+    bri, bro, bphis = L.FEATHER_BLOCKS
+    fblocks = None
+    for a0_, a1_ in bphis:
+        b = _sector_z(bri, bro, a0_, a1_, fz)
+        fblocks = b if fblocks is None else fblocks + b
+    c.add("M65", "Feather-stop blocks (-3 and +48 deg)", fblocks, "steel", "S", group="pitch", tol=0.05,
+          material_label="Steel 42CrMo4 QT", count=2)
+    ubi, ubo, (ua0, ua1), uz = L.FEATHER_BUFFER
+    c.add("B44", "Feather-stop buffer, PU 90 Shore A", _sector_z(ubi, ubo, ua0, ua1, uz), "spring", "S",
+          group="pitch", bought=True, material_label="Polyurethane 90 Shore A (VERIFY V8 h)", tol=0.05)
+    # frame S: wheel stops, trip hook, stem, guide, nuts, return spring, solenoid and its bracket
+    ri, ro, phis, wdeg, bz = L.WHEEL_STOP_BLOCKS
+    blocks = None
+    for ph in phis:
+        b = _sector_z(ri, ro, ph - wdeg / 2, ph + wdeg / 2, bz)
+        blocks = b if blocks is None else blocks + b
+    c.add("M57", "Wheel stop blocks", blocks, "steel", "S", group="pitch", tol=0.05,
+          material_label="Steel 42CrMo4 QT", count=2)
+    hri, hro, (ha0, ha1), hz = L.TRIP_HOOK
+    rri, rro, (ra0, ra1), rz = L.TRIP_RISER
+    sd, sy, sz, (sx0, sx1) = L.TRIP_STEM
+    hook = _sector_z(hri, hro, ha0, ha1, hz) + _sector_z(rri, rro, ra0, ra1, rz) + box(*L.TRIP_BRIDGE)
+    bx0_, bx1_ = L.TRIP_BRIDGE[0]
+    hook = hook - cyl_x(4.0, (bx0_ - 1, bx1_ + 1), sy, sz)          # M4 tapped hole for the stem end
+    c.add("M58", "Trip hook (arc, riser and bridge)", hook, "stainless", "S", group="pitch", tol=0.05,
+          material_label="Stainless 17-4PH H900, hook face nitrided")
+    stem = cyl_x(sd, (sx0, sx1), sy, sz) - box((sx0 - 1, sx1 + 1), (sy + sd / 2 - 0.5, sy + sd / 2 + 1), (sz - sd, sz + sd))
+    stem = stem + cyl_x(4.0, (sx1, bx1_), sy, sz)
+    c.add("M61", "Trip stem (D-flat, M4 end)", stem, "stainless", "S", group="pitch", tol=0.05,
+          material_label="Stainless 17-4PH H900")
+    god, (gx0, gx1), gfd, gft = L.STEM_GUIDE
+    guide = tube_x(god, sd + 0.1, (gx0, gx1), sy, sz) + tube_x(gfd, sd + 0.1, (gx0 - gft, gx0), sy, sz)
+    c.add("M62", "Stem guide bush, D-bore", guide, "bronze", "S", group="pitch", tol=0.05,
+          material_label="Bronze CuSn8, D-bore (anti-rotation), greased seal")
+    nx0, nx1 = L.STEM_NUTS_X
+    c.add("B42", "Out-stop nut and lock nut M6 (A4)", tube_x(10.0, sd, (nx0, nx1), sy, sz), "stainless", "S",
+          group="pitch", bought=True, tol=0.05, count=2)
+    sx0r, sx1r = L.RETURN_SPRING_X
+    c.add("B43", "Return spring and washer (1 N at trip)",
+          tube_x(18.0, 14.5, (sx0r - 0.5, sx1r - 1.0), sy, sz) + tube_x(18.0, sd + 0.4, (sx1r - 1.0, sx1r), sy, sz),
+          "spring", "S", group="pitch", bought=True, tol=0.05)
+    dd, ln, (bx0, bx1), pd, pout = L.LATCH_SOLENOID
+    sol = cyl_x(dd, (bx0, bx1), sy, sz) + cyl_x(pd, (bx1, bx1 + pout), sy, sz) - cyl_x(sd, (bx1 - 5, bx1 + pout + 1), sy, sz)
+    c.add("B06", "Latch solenoid Guardian LT8x16-I-12D", sol, "bought_elec", "S", group="pitch", bought=True,
+          tol=0.05)
+    # bracket: front plate, two side flanges, and a saddle on the tube OD bolted with 2 x M4 into the wall
+    fx0, fx1 = L.SOLENOID_BRACKET_X
+    (sa0, sa1), szr, st_ = L.SOLENOID_SADDLE
+    r_out = L.PITCH_HOUSING_OD / 2
+    br = box((fx0, fx1), (sy - 22, sy + 22), (sz - 15, sz + 15)) - cyl_x(14.0, (fx0 - 1, fx1 + 1), sy, sz)
+    for yy in (sy - 22, sy + 19):
+        xo = -math.sqrt((r_out + st_ / 2) ** 2 - (yy + 1.5) ** 2)
+        br = br + box((fx1, xo), (yy, yy + 3), (sz - 15, sz + 15))
+    br = br + _sector_z(r_out, r_out + st_, sa0, sa1, szr)
+    sfd, sfx = L.STEM_SPOT_FACE
+    br = br - cyl_x(sfd, (-70.0, sfx + 5), sy, sz)
+    for ph, zb in L.SADDLE_BOLTS:
+        br = br - _radial_x(4.5, r_out - 1, r_out + st_ + 1, ph, zb)
+    c.add("M59", "Solenoid bracket with saddle", br, "alu", "S", group="pitch", material_label=ALU_6082, tol=0.05)
+    # inspection port cover (gasketed), over the port on the +X/-Y side of the housing
+    (pa0, pa1), pz, pt = L.PORT_COVER
+    c.add("M63", "Inspection-port cover (gasketed)", _sector_z(r_out, r_out + pt, pa0, pa1, pz), "alu", "S",
+          group="pitch", material_label=ALU_6082, tol=0.05)
+
+
 def _worm_wheel():
     n = L.WORM_WHEEL_TEETH
     m = L.WORM_WHEEL_MODULE
@@ -301,10 +593,11 @@ def _worm_wheel():
     wheel = Pos(0, 0, z0) * extrude(face, z1 - z0)
     hod, hln = L.WHEEL_HUB
     wheel = wheel + cyl_z(hod, (z1, z1 + hln))
-    wheel = wheel - cyl_z(36.0, (z0 - 1, z1 + hln + 1))
-    for a in range(6):
-        ang = math.radians(60 * a)
-        wheel = wheel - cyl_z(6.0, (z0 - 1, z1 + 1), 23 * math.cos(ang), 23 * math.sin(ang))
+    wheel = wheel - cyl_z(L.WHEEL_BORE, (z0 - 1, z1 + hln + 1))
+    nb, rb, tap, _ = L.WHEEL_JOINT            # matches the carrier's clearance holes (structure.latch_wheel_shapes)
+    for a in range(nb):
+        ang = math.radians(360.0 * a / nb)
+        wheel = wheel - cyl_z(tap, (z0 - 1, z1 + hln + 1), rb * math.cos(ang), rb * math.sin(ang))
     return wheel
 
 
